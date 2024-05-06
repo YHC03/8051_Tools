@@ -1,0 +1,10 @@
+# Visual Studio Project Files
+*.sln
+*.vcxproj
+*.vcxproj.user
+*.vcxproj.filters
+
+# Visual Studio Folders
+.vs/
+x64/
+x86/
