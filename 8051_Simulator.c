@@ -1340,7 +1340,6 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 			inputDat();
 
 		chip.internal_RAM[ACC]++;
-		putParity(); // NO C, AC operation
 		return PC;
 	case 0x05: // INC DIR
 		printf("INC 0x%X\n", data1);
@@ -2382,14 +2381,13 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		return PC;
 
 		// 0x90-0x9F
-	case 0x90: // JB
-		printf("JB %XH, %XH\n", data1, data2);
+	case 0x90: // MOV DPTR, #data
+		printf("MOV DPTR, #%XH\n", data1 * 0x100 + data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		if (getBitAddr(data1))
-			return PC + (char)data2;
-
+		movFunc(DPH, data1, 1);
+		movFunc(DPL, data2, 1);
 		return PC;
 	case 0x91: // ACALL
 		printf("ACALL %02XH\n", data1);
@@ -2530,12 +2528,16 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 			clearBitAddr(C);
 		}
 		return PC;
-	case 0xA3: // MOVC A, @A+PC
-		printf("MOVC A, @A+PC\n");
+	case 0xA3: // INC DPTR
+		printf("INC DPTR\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[ACC] = ROM[PC + chip.internal_RAM[ACC]];
+		// DPL 1 증가
+		chip.internal_RAM[DPL]++;
+		if (chip.internal_RAM[DPL] == 0) // DPL Overflow시, DPH 1 증가
+			chip.internal_RAM[DPH]++;
+
 		return PC;
 	case 0xA4: // MUL
 		printf("MUL AB\n");
@@ -2545,7 +2547,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		mulAndDiv(0);
 		return PC;
 	case 0xA5: // Unused
-		printf("A5(Unused)\n");
+		printf("DB A5H\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
