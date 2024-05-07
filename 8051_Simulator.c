@@ -513,6 +513,22 @@ int interruptControl(int PC)
 	// 이동할 인터럽트의 위치를 임시로 저장
 	char res;
 
+	// 전체 인터럽트 비활성화 시, 인터럽트 작동 종료
+	if (!getBitAddr(EA))
+	{
+		// 실행 대기중(intData = 2)인 인터럽트 초기화
+		// 실행중(intData = 1)인 인터럽트는 초기화하지 않음
+		for (char i = 0; i < 4; i++)
+		{
+			if (intData[i] == 2)
+			{
+				intData[i] = 0;
+			}
+		}
+
+		return PC;
+	}
+
 	// 각 인터럽트별로 활성화 확인
 	if (getBitAddr(EX0)) // 외부 인터럽트 0
 	{
