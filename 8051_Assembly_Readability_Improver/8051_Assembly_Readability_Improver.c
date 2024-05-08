@@ -22,7 +22,8 @@ void initChar(char* targ, int len)
 * 1-2) :(Colon)이 가장 처음 나온 경우, 공백 삭제(두번 이상 나온 경우(잘못된 코드), 공백 추가)
 * 2) 소문자 알파벳을 대문자로 바꾸기 (주석 제외)
 * 3) , 뒤에 공백 없는 경우 공백 생성
-* 4) 주석은 그대로 출력
+* 4) Assembly에서 주석 표기를 하는 ;(Semicolon) 뒤에 공백이 최소 1개 이상 있도록 변경
+* 4-1) 주석 뒤에 공백 유무와 관계없이, 주석의 내용 그대로 출력되는 코드를 해당 소스 코드 위에 주석으로 남겨두었음
 * 5) 공백만 있는 줄의 공백 제거
 * 
 * 입력 변수 : 입력할 파일의 이름
@@ -88,7 +89,21 @@ int process(char* fileName)
 				if(operandNo != 0) // 앞에 명령어가 있는 경우
 					strcat(lineWrite, " "); // 공백 추가
 
+
+				/* 아래 경우는, 단순히 주석 이후의 문자열을 그대로 복사하는 경우이다. */
+				/*
 				strncat(lineWrite, lineTmp + readCurr, strlen(lineTmp) - readCurr - 1); // 주석은 개행문자 빼고 그대로 출력
+				*/
+
+				/* 아래 경우는, Assembly에서 주석 표기를 하는 ;(Semicolon) 뒤에 공백이 하나 이상 있도록 설정하는 경우이다. */
+				strcat(lineWrite, ";"); // 주석 표시 추가
+				if (lineTmp[readCurr + 1] != ' ' && lineTmp[readCurr + 1] != '\r' && lineTmp[readCurr + 1] != '\n') // 주석 뒤에 공백이나 탭이 없거나, 해당 줄이 주석 시작으로 종료되지 않은 경우
+				{
+					strcat(lineWrite, " "); // 공백 추가
+				}
+				strncat(lineWrite, lineTmp + readCurr + 1, strlen(lineTmp) - readCurr - 2); // 주석은 개행문자 빼고 그대로 출력
+				/**/
+
 				readCurr = strlen(lineTmp);
 				isBlank = 0;
 
@@ -129,6 +144,7 @@ int process(char* fileName)
 							} // Colon이 한번 이상 나타나지 않은 경우에는 공백을 출력하지 않음
 
 							isColonAppeared = 1;
+
 						}else if(operandNo){ // Colon이 한번도 나타나지 않은 경우면서, 첫 문장이 아닌 경우
 							if (prevLetter != '#' && prevLetter != '@')
 							{
