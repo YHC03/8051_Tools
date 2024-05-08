@@ -1306,7 +1306,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 	// 임시로 저장할 데이터
 	unsigned short PC_tmp = 0;
 	char tmpValue = 0;
-	
+
 	// 다음 명령어 출력
 	printf("Next (at Current Status) : ");
 
@@ -1320,13 +1320,13 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0x01: // AJMP
-		printf("AJMP %02XH\n", data1);
+		printf("AJMP %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		return (PC / 0x800) * 0x800 + 0x000 + data1;
 	case 0x02: // LJMP
-		printf("LJMP %02X%02XH\n", data1, data2);
+		printf("LJMP %05XH\n", data1 * 0x100 + data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1423,10 +1423,10 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		chip.internal_RAM[8 * PSWROM + 7]++;
 		return PC;
 
-	// 0x10-Ox1F
+		// 0x10-Ox1F
 
 	case 0x10: // JBC
-		printf("JBC %XH, %XH\n", data1, data2);
+		printf("JBC %03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1438,7 +1438,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0x11: // ACALL
-		printf("ACALL %02XH\n", data1);
+		printf("ACALL %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1446,7 +1446,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		stackOperationPC(PC / 0x100, 0);
 		return (PC / 0x800) * 0x800 + 0x000 + data1;
 	case 0x12: // LCALL
-		printf("LCALL %02X%02XH\n", data1, data2);
+		printf("LCALL %05XH\n", data1 * 0x100 + data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1467,7 +1467,8 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (tmpValue)
 		{
 			setBitAddr(C);
-		}else{
+		}
+		else {
 			clearBitAddr(C);
 		}
 		return PC;
@@ -1480,7 +1481,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		putParity(); // NO C, AC operation
 		return PC;
 	case 0x15: // DEC DIR
-		printf("DEC %XH\n", data1);
+		printf("DEC %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1557,10 +1558,10 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		chip.internal_RAM[8 * PSWROM + 7]--;
 		return PC;
 
-	// 0x20-0x2F
+		// 0x20-0x2F
 
 	case 0x20: // JB
-		printf("JB %XH, %XH\n", data1, data2);
+		printf("JB %03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1569,7 +1570,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0x21: // AJMP
-		printf("AJMP %02XH\n", data1);
+		printf("AJMP %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1591,14 +1592,14 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		chip.internal_RAM[ACC] = chip.internal_RAM[ACC] << 1;
 		return PC;
 	case 0x24: // ADD A, data
-		printf("ADD A, #%XH\n", data1);
+		printf("ADD A, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		addFunc(data1, 1, 0);
 		return PC;
 	case 0x25: // ADD DIR
-		printf("ADD A, %XH\n", data1);
+		printf("ADD A, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1678,7 +1679,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		// 0x30-Ox3F
 
 	case 0x30: // JNB
-		printf("JNB %XH, %XH\n", data1, data2);
+		printf("JNB %03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1687,7 +1688,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0x31: // ACALL
-		printf("ACALL %02XH\n", data1);
+		printf("ACALL %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1718,20 +1719,21 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (tmpValue)
 		{
 			setBitAddr(C);
-		}else{
+		}
+		else {
 			clearBitAddr(C);
 		}
 		return PC;
 
 	case 0x34: // ADDC A, data
-		printf("ADDC A, #%XH\n", data1);
+		printf("ADDC A, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		addFunc(data1, 1, 1);
 		return PC;
 	case 0x35: // ADDC DIR
-		printf("ADDC A, %XH\n", data1);
+		printf("ADDC A, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1808,9 +1810,9 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		addFunc(8 * PSWROM + 7, 0, 1);
 		return PC;
 
-	// 0x40-0x4F
+		// 0x40-0x4F
 	case 0x40: // JC
-		printf("JC %XH\n", data1);
+		printf("JC %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1819,34 +1821,34 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0x41: // AJMP
-		printf("AJMP %02XH\n", data1);
+		printf("AJMP %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		return (PC / 0x800) * 0x800 + 0x000 + data1;
 	case 0x42: // ORL dir A
-		printf("ORL %XH, A\n", data1);
+		printf("ORL %03XH, A\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		orOperation(data1, ACC, 0, 0);
 		return PC;
 	case 0x43: // ORL dir data
-		printf("ORL %XH, #%XH\n", data1, data2);
+		printf("ORL %03XH, #%03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		orOperation(data1, data2, 1, 0);
 		return PC;
 	case 0x44: // ORL A, data
-		printf("ORL A, #%XH\n", data1);
+		printf("ORL A, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		orOperation(ACC, data1, 1, 0);
 		return PC;
 	case 0x45: // ORL A, dir
-		printf("ORL A, %XH\n", data1);
+		printf("ORL A, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1925,7 +1927,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		// 0x50-0x5F
 	case 0x50: // JNC
-		printf("JNC %XH\n", data1);
+		printf("JNC %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1934,7 +1936,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0x51: // ACALL
-		printf("ACALL %02XH\n", data1);
+		printf("ACALL %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1942,28 +1944,28 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		stackOperation(PC / 0x100, 0);
 		return (PC / 0x800) * 0x800 + 0x000 + data1;
 	case 0x52: // ANL dir A
-		printf("ANL %XH, A\n", data1);
+		printf("ANL %03XH, A\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		andOperation(data1, ACC, 0, 0);
 		return PC;
 	case 0x53: // ANL dir data
-		printf("ANL %XH, #%XH\n", data1, data2);
+		printf("ANL %03XH, #%03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		andOperation(data1, data2, 1, 0);
 		return PC;
 	case 0x54: // ANL A, data
-		printf("ANL A, #%XH\n", data1);
+		printf("ANL A, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		andOperation(ACC, data1, 1, 0);
 		return PC;
 	case 0x55: // ANL A, dir
-		printf("ANL A, %XH\n", data1);
+		printf("ANL A, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2042,7 +2044,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		// 0x60-0x6F
 	case 0x60: // JZ
-		printf("JZ %XH\n", data1);
+		printf("JZ %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2051,34 +2053,34 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0x61: // AJMP
-		printf("AJMP %02XH\n", data1);
+		printf("AJMP %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		return (PC / 0x800) * 0x800 + 0x000 + data1;
 	case 0x62: // XRL dir A
-		printf("XRL %XH, A\n", data1);
+		printf("XRL %03XH, A\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		xorOperation(data1, ACC, 0);
 		return PC;
 	case 0x63: // XRL dir data
-		printf("XRL %XH, #%XH\n", data1, data2);
+		printf("XRL %03XH, #%03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		xorOperation(data1, data2, 1);
 		return PC;
 	case 0x64: // XRL A, data
-		printf("XRL A, #%XH\n", data1);
+		printf("XRL A, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		xorOperation(ACC, data1, 1);
 		return PC;
 	case 0x65: // XRL A, dir
-		printf("XRL A, %XH\n", data1);
+		printf("XRL A, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2154,10 +2156,10 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		xorOperation(ACC, 8 * PSWROM + 7, 0);
 		return PC;
-	
-	// 0x70 - 0x7F
+
+		// 0x70 - 0x7F
 	case 0x70: // JNZ
-		printf("JNZ %XH\n", data1);
+		printf("JNZ %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2166,7 +2168,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0x71: // ACALL
-		printf("ACALL %02XH\n", data1);
+		printf("ACALL %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2174,7 +2176,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		stackOperation(PC / 0x100, 0);
 		return (PC / 0x800) * 0x800 + 0x000 + data1;
 	case 0x72: // ORL C, bit
-		printf("ORL C, #%XH\n", data1);
+		printf("ORL C, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2187,84 +2189,84 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return chip.internal_RAM[DPH] * 0x100 + chip.internal_RAM[DPL] + chip.internal_RAM[ACC] - 1;
 	case 0x74: // MOV A, data
-		printf("MOV A, #%XH\n", data1);
+		printf("MOV A, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(ACC, data1, 1);
 		return PC;
 	case 0x75: // MOV dir, data
-		printf("MOV %XH, #%XH\n", data1, data2);
+		printf("MOV %03XH, #%03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(data1, data2, 1);
 		return PC;
 	case 0x76: // MOV @R0, dat
-		printf("MOV @R0, #%XH\n", data1);
+		printf("MOV @R0, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(chip.internal_RAM[8 * PSWROM], data1, 1);
 		return PC;
 	case 0x77: // MOV @R1, dat
-		printf("MOV @R1, #%XH\n", data1);
+		printf("MOV @R1, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(chip.internal_RAM[8 * PSWROM + 1], data1, 1);
 		return PC;
 	case 0x78: // MOV R0, dat
-		printf("MOV R0, #%XH\n", data1);
+		printf("MOV R0, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(8 * PSWROM, data1, 1);
 		return PC;
 	case 0x79: // MOV R1, dat
-		printf("MOV R1, #%XH\n", data1);
+		printf("MOV R1, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(8 * PSWROM + 1, data1, 1);
 		return PC;
 	case 0x7A: // MOV R2, dat
-		printf("MOV R2, #%XH\n", data1);
+		printf("MOV R2, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(8 * PSWROM + 2, data1, 1);
 		return PC;
 	case 0x7B: // MOV R3, dat
-		printf("MOV R3, #%XH\n", data1);
+		printf("MOV R3, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(8 * PSWROM + 3, data1, 1);
 		return PC;
 	case 0x7C: // MOV R4, dat
-		printf("MOV R4, #%XH\n", data1);
+		printf("MOV R4, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(8 * PSWROM + 4, data1, 1);
 		return PC;
 	case 0x7D: // MOV R5, dat
-		printf("MOV R5, #%XH\n", data1);
+		printf("MOV R5, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(8 * PSWROM + 5, data1, 1);
 		return PC;
 	case 0x7E: // MOV R6, dat
-		printf("MOV R6, #%XH\n", data1);
+		printf("MOV R6, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(8 * PSWROM + 6, data1, 1);
 		return PC;
 	case 0x7F: // MOV R7, dat
-		printf("MOV R7, #%XH\n", data1);
+		printf("MOV R7, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2273,20 +2275,20 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		// 0x80-0x8F
 	case 0x80: // SJMP
-		printf("SJMP %02XH\n", data1);
+		printf("SJMP %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		return PC + (char)data1;
 
 	case 0x81: // AJMP
-		printf("AJMP %02XH\n", data1);
+		printf("AJMP %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		return (PC / 0x800) * 0x800 + 0x000 + data1;
 	case 0x82: // ANL C, bit
-		printf("ANL C, %XH\n", data1);
+		printf("ANL C, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2307,77 +2309,77 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		mulAndDiv(1);
 		return PC;
 	case 0x85: // MOV dir, dir
-		printf("MOV %XH, %XH\n", data1, data2);
+		printf("MOV %03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(data1, data2, 0);
 		return PC;
 	case 0x86: // MOV dir, @R0
-		printf("MOV %XH, @R0\n", data1);
+		printf("MOV %03XH, @R0\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(data1, chip.internal_RAM[8 * PSWROM], 0);
 		return PC;
 	case 0x87: // MOV dir, @R1
-		printf("MOV %XH, @R1\n", data1);
+		printf("MOV %03XH, @R1\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(data1, chip.internal_RAM[8 * PSWROM + 1], 0);
 		return PC;
 	case 0x88: // MOV dir, R0
-		printf("MOV %XH, R0\n", data1);
+		printf("MOV %03XH, R0\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(data1, 8 * PSWROM, 0);
 		return PC;
 	case 0x89: // MOV dir, R1
-		printf("MOV %XH, R1\n", data1);
+		printf("MOV %03XH, R1\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(data1, 8 * PSWROM + 1, 0);
 		return PC;
 	case 0x8A: // MOV dir, R2
-		printf("MOV %XH, R2\n", data1);
+		printf("MOV %03XH, R2\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(data1, 8 * PSWROM + 2, 0);
 		return PC;
 	case 0x8B: // MOV dir, R3
-		printf("MOV %XH, R3\n", data1);
+		printf("MOV %03XH, R3\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(data1, 8 * PSWROM + 3, 0);
 		return PC;
 	case 0x8C: // MOV dir, R4
-		printf("MOV %XH, R4\n", data1);
+		printf("MOV %03XH, R4\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(data1, 8 * PSWROM + 4, 0);
 		return PC;
 	case 0x8D: // MOV dir, R5
-		printf("MOV %XH, R5\n", data1);
+		printf("MOV %03XH, R5\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(data1, 8 * PSWROM + 5, 0);
 		return PC;
 	case 0x8E: // MOV dir, R6
-		printf("MOV %XH, R6\n", data1);
+		printf("MOV %03XH, R6\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(data1, 8 * PSWROM + 6, 0);
 		return PC;
 	case 0x8F: // MOV dir, R7
-		printf("MOV %XH, R7\n", data1);
+		printf("MOV %03XH, R7\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2386,7 +2388,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		// 0x90-0x9F
 	case 0x90: // MOV DPTR, #data
-		printf("MOV DPTR, #%XH\n", data1 * 0x100 + data2);
+		printf("MOV DPTR, #%03XH\n", data1 * 0x100 + data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2394,7 +2396,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		movFunc(DPL, data2, 1);
 		return PC;
 	case 0x91: // ACALL
-		printf("ACALL %02XH\n", data1);
+		printf("ACALL %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2402,14 +2404,15 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		stackOperation(PC / 0x100, 0);
 		return (PC / 0x800) * 0x800 + 0x000 + data1;
 	case 0x92: // MOV bit, C
-		printf("MOV %XH, C\n", data1);
+		printf("MOV %03XH, C\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		if (getBitAddr(C))
 		{
 			setBitAddr(data1);
-		}else{
+		}
+		else {
 			clearBitAddr(data1);
 		}
 		return PC;
@@ -2421,14 +2424,14 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		chip.internal_RAM[ACC] = ROM[chip.internal_RAM[DPH] * 0x100 + chip.internal_RAM[DPL] + chip.internal_RAM[ACC]];
 		return PC;
 	case 0x94: // SUBB A, data
-		printf("SUBB A, #%XH\n", data1);
+		printf("SUBB A, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		subbFunc(data1, 1);
 		return PC;
 	case 0x95: // SUBB DIR
-		printf("SUBB A, %XH\n", data1);
+		printf("SUBB A, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2507,7 +2510,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		// 0xA0-0xAF
 	case 0xA0: // ORL C, ~bit
-		printf("ORL C, /%XH\n", data1);
+		printf("ORL C, /%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2515,20 +2518,21 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		return PC;
 
 	case 0xA1: // AJMP
-		printf("AJMP %02XH\n", data1);
+		printf("AJMP %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		return (PC / 0x800) * 0x800 + 0x000 + data1;
 	case 0xA2: // MOV C, bit
-		printf("MOV C, %XH\n", data1);
+		printf("MOV C, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		if (getBitAddr(data1))
 		{
 			setBitAddr(C);
-		}else{
+		}
+		else {
 			clearBitAddr(C);
 		}
 		return PC;
@@ -2551,76 +2555,76 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		mulAndDiv(0);
 		return PC;
 	case 0xA5: // Unused
-		printf("DB A5H\n");
+		printf("DB 0A5H\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		return PC;
 	case 0xA6: // MOV @R0, dir
-		printf("MOV @R0, %XH\n", data1);
+		printf("MOV @R0, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(chip.internal_RAM[8 * PSWROM], data1, 0);
 		return PC;
 	case 0xA7: // MOV @R1, dir
-		printf("MOV @R1, %XH\n", data1);
+		printf("MOV @R1, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(chip.internal_RAM[8 * PSWROM + 1], data1, 0);
 		return PC;
 	case 0xA8: // MOV R0, dir
-		printf("MOV R0, %XH\n", data1);
+		printf("MOV R0, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(8 * PSWROM, data1, 0);
 		return PC;
 	case 0xA9: // MOV R1, dir
-		printf("MOV R1, %XH\n", data1);
+		printf("MOV R1, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(8 * PSWROM + 1, data1, 0);
 		return PC;
 	case 0xAA: // MOV R2, dir
-		printf("MOV R2, %XH\n", data1);
+		printf("MOV R2, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(8 * PSWROM + 2, data1, 0);
 		return PC;
 	case 0xAB: // MOV R3, dir
-		printf("MOV R3, %XH\n", data1);
+		printf("MOV R3, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(8 * PSWROM + 3, data1, 0);
 		return PC;
 	case 0xAC: // MOV R4, dir
-		printf("MOV R4, %XH\n", data1);
+		printf("MOV R4, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(8 * PSWROM + 4, data1, 0);
 		return PC;
 	case 0xAD: // MOV R5, dir
-		printf("MOV R5, %XH\n", data1);
+		printf("MOV R5, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(8 * PSWROM + 5, data1, 0);
 		return PC;
 	case 0xAE: // MOV R6, dir
-		printf("MOV R6, %XH\n", data1);
+		printf("MOV R6, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		movFunc(8 * PSWROM + 6, data1, 0);
 		return PC;
 	case 0xAF: // MOV R7, dir
-		printf("MOV R7, %XH\n", data1);
+		printf("MOV R7, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2629,14 +2633,14 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		//0xB0-0xBF
 	case 0xB0: // ANL C, ~bit
-		printf("ANL C, /%XH\n", data1);
+		printf("ANL C, /%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		andOperation(C, data1, 0, -1);
 		return PC;
 	case 0xB1: // ACALL
-		printf("ACALL %02XH\n", data1);
+		printf("ACALL %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2644,7 +2648,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		stackOperation(PC / 0x100, 0);
 		return (PC / 0x800) * 0x800 + 0x000 + data1;
 	case 0xB2: // CPL bit
-		printf("CPL %XH\n", data1);
+		printf("CPL %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2656,15 +2660,18 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 			if (chip.latch[(data1 - 0x80) / 16] & (unsigned char)pow(2, data1 % 16))
 			{
 				clearBitAddr(data1);
-			}else{
+			}
+			else {
 				setBitAddr(data1);
 			}
 
-		}else{
+		}
+		else {
 			if (getBitAddr(data1))
 			{
 				clearBitAddr(data1);
-			}else{
+			}
+			else {
 				setBitAddr(data1);
 			}
 		}
@@ -2677,12 +2684,13 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (getBitAddr(C))
 		{
 			clearBitAddr(C);
-		}else{
+		}
+		else {
 			setBitAddr(C);
 		}
 		return PC;
 	case 0xB4: // CJNE A, DATA, label
-		printf("CJNE A, #%XH, %XH\n", data1, data2);
+		printf("CJNE A, #%03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2691,7 +2699,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xB5: // CJNE A, dir, label
-		printf("CJNE A, %XH, %XH\n", data1, data2);
+		printf("CJNE A, %03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2700,7 +2708,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xB6: // CJNE @R0, DATA, label
-		printf("CJNE @R0, #%XH, %XH\n", data1, data2);
+		printf("CJNE @R0, #%03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2709,7 +2717,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xB7: // CJNE @R1, DATA, label
-		printf("CJNE @R1, #%XH, %XH\n", data1, data2);
+		printf("CJNE @R1, #%03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2718,7 +2726,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xB8: // CJNE R0, DATA, label
-		printf("CJNE R0, #%XH, %XH\n", data1, data2);
+		printf("CJNE R0, #%03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2727,7 +2735,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xB9: // CJNE R1, DATA, label
-		printf("CJNE R1, #%XH, %XH\n", data1, data2);
+		printf("CJNE R1, #%03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2736,7 +2744,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xBA: // CJNE R2, DATA, label
-		printf("CJNE R2, #%XH, %XH\n", data1, data2);
+		printf("CJNE R2, #%03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2745,7 +2753,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xBB: // CJNE R3, DATA, label
-		printf("CJNE R3, #%XH, %XH\n", data1, data2);
+		printf("CJNE R3, #%03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2754,7 +2762,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xBC: // CJNE R4, DATA, label
-		printf("CJNE R4, #%XH, %XH\n", data1, data2);
+		printf("CJNE R4, #%03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2763,7 +2771,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xBD: // CJNE R5, DATA, label
-		printf("CJNE R5, #%XH, %XH\n", data1, data2);
+		printf("CJNE R5, #%03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2772,7 +2780,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xBE: // CJNE R6, DATA, label
-		printf("CJNE R6, #%XH, %XH\n", data1, data2);
+		printf("CJNE R6, #%03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2781,7 +2789,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xBF: // CJNE R7, DATA, label
-		printf("CJNE R7, #%XH, %XH\n", data1, data2);
+		printf("CJNE R7, #%03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2789,23 +2797,23 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 			return PC + (char)data2;
 
 		return PC;
-		
+
 		//0xC0-0xCF
 	case 0xC0: // PUSH
-		printf("PUSH %XH\n", data1);
+		printf("PUSH %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		stackOperation(data1, 0);
 		return PC;
 	case 0xC1: // AJMP
-		printf("AJMP %02XH\n", data1);
+		printf("AJMP %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		return (PC / 0x800) * 0x800 + 0x000 + data1;
 	case 0xC2: // CLR bit
-		printf("CLR %XH\n", data1);
+		printf("CLR %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2826,7 +2834,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		chip.internal_RAM[ACC] = (chip.internal_RAM[ACC] % 16) * 16 + chip.internal_RAM[ACC] / 16;
 		return PC;
 	case 0xC5: // XCH dir
-		printf("XCH %XH\n", data1);
+		printf("XCH %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2905,14 +2913,14 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		//0xD0-0xDF
 	case 0xD0: // POP
-		printf("POP %XH\n", data1);
+		printf("POP %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		stackOperation(data1, 1);
 		return PC;
 	case 0xD1: // ACALL
-		printf("ACALL %02XH\n", data1);
+		printf("ACALL %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2920,7 +2928,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		stackOperation(PC / 0x100, 0);
 		return (PC / 0x800) * 0x800 + 0x000 + data1;
 	case 0xD2: // SETB bit
-		printf("SETB %XH\n", data1);
+		printf("SETB %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2941,7 +2949,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		DAOperation();
 		return PC;
 	case 0xD5: // DJNZ dir, label
-		printf("DJNZ %XH, %XH\n", data1, data2);
+		printf("DJNZ %03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2971,7 +2979,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		chip.internal_RAM[ACC] = (chip.internal_RAM[ACC] & 0xF0) + tmpValue;
 		return PC;
 	case 0xD8: // DJNZ R0, label
-		printf("DJNZ R0, %XH\n", data1);
+		printf("DJNZ R0, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2983,7 +2991,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xD9: // DJNZ R1, label
-		printf("DJNZ R1, %XH\n", data1);
+		printf("DJNZ R1, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2995,7 +3003,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xDA: // DJNZ R2, label
-		printf("DJNZ R2, %XH\n", data1);
+		printf("DJNZ R2, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -3007,7 +3015,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xDB: // DJNZ R3, label
-		printf("DJNZ R3, %XH\n", data1);
+		printf("DJNZ R3, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -3019,7 +3027,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xDC: // DJNZ R4, label
-		printf("DJNZ R4, %XH\n", data1);
+		printf("DJNZ R4, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -3031,7 +3039,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xDD: // DJNZ R5, label
-		printf("DJNZ R5, %XH\n", data1);
+		printf("DJNZ R5, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -3043,7 +3051,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xDE:// DJNZ R6, label
-		printf("DJNZ R6, %XH\n", data1);
+		printf("DJNZ R6, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -3055,7 +3063,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xDF: // DJNZ R7, label
-		printf("DJNZ R7, %XH\n", data1);
+		printf("DJNZ R7, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -3066,7 +3074,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		}
 
 		return PC;
-	
+
 		// 0xE0-0xEF
 	case 0xE0: // MOVX A, @A+DPTR
 		printf("MOVX A, @A+DPTR\n");
@@ -3077,7 +3085,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		return PC;
 
 	case 0xE1: // AJMP
-		printf("AJMP %02XH\n", data1);
+		printf("AJMP %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -3104,7 +3112,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		movFunc(ACC, 0, 1);
 		return PC;
 	case 0xE5: // MOV A, dir
-		printf("MOV A, %XH\n", data1);
+		printf("MOV A, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -3191,7 +3199,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		return PC;
 
 	case 0xF1: // ACALL
-		printf("ACALL %02XH\n", data1);
+		printf("ACALL %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -3220,7 +3228,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		chip.internal_RAM[ACC] = 0xFF - chip.internal_RAM[ACC];
 		return PC;
 	case 0xF5: // MOV dir, A
-		printf("MOV %XH, A\n", data1);
+		printf("MOV %03XH, A\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 

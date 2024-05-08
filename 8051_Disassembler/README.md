@@ -9,7 +9,6 @@ C
 stdio.h : stdin, stdout 이용과 File 입출력을 위함  
 stdlib.h : exit() 함수를 사용하기 위함  
 string.h : 읽어들일 File 주소와 이름에 공백이 있는 경우를 처리하기 위함  
-math.h : pow() 함수를 사용하기 위함  
 
 ---
 ## 작동 방법

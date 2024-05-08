@@ -85,6 +85,9 @@ int process(char* fileName)
 		{
 			if (lineTmp[readCurr] == ';') // 주석 발견 시
 			{
+				if(operandNo != 0) // 앞에 명령어가 있는 경우
+					strcat(lineWrite, " "); // 공백 추가
+
 				strncat(lineWrite, lineTmp + readCurr, strlen(lineTmp) - readCurr - 1); // 주석은 개행문자 빼고 그대로 출력
 				readCurr = strlen(lineTmp);
 				isBlank = 0;

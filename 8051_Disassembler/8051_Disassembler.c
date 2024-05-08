@@ -1,7 +1,6 @@
 ﻿#include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-#include<math.h>
 
 
 /*
@@ -121,7 +120,7 @@ int fileReader(char* fileName)
 		parity += tmp_REM;
 
 		// 해당 줄의 Program Counter 위치를 읽고
-		tmp_PC = asciiToHEX(tmp_Data[3]) * pow(16, 3) + asciiToHEX(tmp_Data[4]) * pow(16, 2) + asciiToHEX(tmp_Data[5]) * pow(16, 1) + asciiToHEX(tmp_Data[6]); //AAAA
+		tmp_PC = asciiToHEX(tmp_Data[3]) * 0x1000 + asciiToHEX(tmp_Data[4]) * 0x100 + asciiToHEX(tmp_Data[5]) * 0x10 + asciiToHEX(tmp_Data[6]); //AAAA
 		parity += tmp_PC / 0x100 + tmp_PC % 0x100;
 
 		// 해당 줄의 종료 여부를 읽고
@@ -184,7 +183,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0x02: // LJMP
-		fprintf(targetFile, "LJMP %02X%03XH\n", data1, data2);
+		fprintf(targetFile, "LJMP %05XH\n", data1 * 0x100 + data2);
 
 		break;
 	case 0x03: // RR A
@@ -251,7 +250,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0x12: // LCALL
-		fprintf(targetFile, "LCALL %02X%03XH\n", data1, data2);
+		fprintf(targetFile, "LCALL %05XH\n", data1 * 0x100 + data2);
 
 		break;
 	case 0x13: // RRC A
@@ -1267,7 +1266,7 @@ void RunProgram(char* fileName, int end_PC)
 	target = fopen(fileName, "w");
 	if (target == NULL)
 	{
-		printf("Output Error on Clearing Target File!\n");
+		printf("Output Error at Clearing Target File!\n");
 		exit(1);
 	}
 	fclose(target);
@@ -1348,13 +1347,13 @@ void RunProgram(char* fileName, int end_PC)
 	target = fopen(fileName, "a");
 	if (target == NULL)
 	{
-		printf("Output Error on Finish Writing File!\n");
+		printf("Output Error at Finish Writing File!\n");
 		exit(1);
 	}
 	fprintf(target, "END\n");
 	fclose(target);
 
-	printf("Output Completed on %s\n", fileName);
+	printf("Output Completed at %s\n", fileName);
 	return;
 }
 
