@@ -95,7 +95,7 @@ const unsigned char PX0 = 0xB8;
 // 함수 시작
 
 // 파일 입력
-void fileReader(char* fileName);
+int fileReader(char* fileName);
 unsigned char asciiToHEX(unsigned char orig); // HEX 변환
 
 // 프로그램 구동
@@ -1196,10 +1196,10 @@ unsigned char asciiToHEX(unsigned char orig)
 /* fileReader() 함수
 *
 * 기능 : 주어진 HEX 파일을 읽어들여 ROM 변수에 저장한다.
-* 입력 변수 없음
-* 출력 변수 없음
+* 입력 변수 : fileName(입력 파일의 위치와 이름)
+* 출력 변수 : 마지막 명령어의 Program Counter의 위치
 */
-void fileReader(char* fileName)
+int fileReader(char* fileName)
 {
 	// 파일을 연다
 	FILE* hexFile = fopen(fileName, "r");
@@ -1212,7 +1212,7 @@ void fileReader(char* fileName)
 
 	// 데이터 임시 저장
 	unsigned char tmp_Data[300], parity=0;
-	int curr_PC = 0, tmp_PC = 0, tmp_REM, isEnd = 0, lineNo = 0;
+	int curr_PC = 0, tmp_PC = 0, prev_PC = 0, tmp_REM = 0, prev_REM = 0, isEnd = 0, lineNo = 0;
 	while (!isEnd) // 종료 표시가 있을때까지 반복
 	{
 		// Parity를 초기화하고
@@ -1228,6 +1228,10 @@ void fileReader(char* fileName)
 			printf("File Data Error!\n");
 			exit(1);
 		}
+
+		// 이전값 저장 후
+		prev_PC = tmp_PC - prev_REM;
+		prev_REM = tmp_REM;
 
 		// 해당 줄의 명령어 개수를 읽고
 		tmp_REM = asciiToHEX(tmp_Data[1]) * 16 + asciiToHEX(tmp_Data[2]); //CC
@@ -1266,9 +1270,9 @@ void fileReader(char* fileName)
 	fclose(hexFile);
 
 	// 파일 읽기를 성공했다고 출력한다.
-	printf("File Read Succeed\n");
+	printf("File Read Finished with No Error\n");
 
-	return;
+	return prev_PC + prev_REM;
 }
 
 
@@ -3306,10 +3310,10 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 /* RunProgram() 함수
 *
 * 기능 : 프로그램을 실행한다.
-* 입력 변수 : mode(자동 실행시 1, 수동 디버그시 0)
+* 입력 변수 : mode(자동 실행시 1, 수동 디버그시 0), end_PC(.hex 파일에서 마지막 Program Counter의 위치)
 * 출력 변수 없음
 */
-void RunProgram(unsigned char mode)
+void RunProgram(unsigned char mode, int end_PC)
 {
 	// 명령어 Cycle과 Program Counter
 	unsigned long long int cycle = 0;
@@ -3323,11 +3327,11 @@ void RunProgram(unsigned char mode)
 	// 추가 데이터와 명령어 길이
 	unsigned char dat1=0, dat2=0, bytes=1;
 
-	// 반복 및 자동 실행 중지용 변수
-	int i = 0;
-	unsigned char nopCount = 0;
+	// 종료 여부 확인 변수
+	int isEnd = 0;
 
-	while (1)
+
+	while (!isEnd)
 	{
 
 		// 디버그 모드인 경우 출력
@@ -3348,10 +3352,12 @@ void RunProgram(unsigned char mode)
 		tmp_Code = ROM[PC];
 		PC++;
 
+		if (PC == 0 && mode) { isEnd = 1; }
+
+
 		// 명령어 길이 계산
-		i = 0;
 		bytes = 1;
-		while(1) // 2byte 명령어인지 확인
+		for (int i = 0; 0xF5 != TWO_BYTES[i]; i++) // 2byte 명령어인지 확인
 		{
 			if (TWO_BYTES[i] == tmp_Code)
 			{
@@ -3360,15 +3366,12 @@ void RunProgram(unsigned char mode)
 				PC++;
 				break;
 			}
-			if (0xF5 == TWO_BYTES[i]) // 2byte 명령어 확인 끝났는지 확인
-			{
-				break;
-			}
-			i++;
 		}
 
-		i = 0;
-		while (1) // 3byte 명령어인지 확인
+		if (PC == 0 && mode) { isEnd = 1; }
+
+
+		for (int i = 0; 0xD5 != THREE_BYTES[i]; i++) // 3byte 명령어인지 확인
 		{
 			if (THREE_BYTES[i] == tmp_Code)
 			{
@@ -3379,30 +3382,24 @@ void RunProgram(unsigned char mode)
 				PC++;
 				break;
 			}
-			if (0xD5 == THREE_BYTES[i]) // 3byte 명령어 확인 끝났는지 확인
-			{
-				break;
-			}
-			i++;
 		}
 
+		if (PC == 0 && mode) { isEnd = 1; }
+
+
 		// Cycle 계산
-		i = 0;
 		cycle++;
-		while (1) // 2cycle 명령어인지 확인
+
+		for (int i = 0; 0xF3 != TWO_CYCLE[i]; i++) // 2cycle 명령어인지 확인
 		{
 			if (TWO_CYCLE[i] == tmp_Code)
 			{
 				cycle++;
 				break;
 			}
-			if (TWO_CYCLE[i] == 0xF3) // 2cycle 명령어 확인 끝났는지 확인
-			{
-				break;
-			}
-			i++;
 		}
-		for (i = 0; i < 2; i++) // 4cycle 명령어인지 확인
+
+		for (int i = 0; i < 2; i++) // 4cycle 명령어인지 확인
 		{
 			if (FOUR_CYCLE[i] == tmp_Code)
 			{
@@ -3411,7 +3408,8 @@ void RunProgram(unsigned char mode)
 			}
 		}
 
-		if (mode) { if (tmp_Code == 0) { nopCount++; } else { nopCount = 0; } } // 자동 실행 모드인 경우, 연속 NOP 명령어 실행 계산
+
+		if (PC > end_PC && mode){ isEnd = 1; }
 
 		timerControl(cycle - prevCycle); // Timer 설정
 
@@ -3419,14 +3417,15 @@ void RunProgram(unsigned char mode)
 		PC = programRunner(tmp_Code, dat1, dat2, PC, mode); // 해당 명령어 실행
 		putParity(); // Parity 계산
 
-
-		if (mode && nopCount >= 10) { break; } // 자동 실행 모드에서, NOP가 연속 10회 이상 작동 시, 실행 종료
+		if (PC > end_PC && mode) { isEnd = 1; } // 자동 실행 모드에서, Program Counter가 파일 끝을 넘어간 경우, 실행 종료
 		if (mode && (prev_PC > PC)) { break; } // 자동 실행 모드에서, Program Counter가 Overflow시, 실행 종료 (다만, 실행 시간이 매우 오래 걸림)
 	}
+
 	if (mode) // 자동 실행 모드에서, 결괏값 출력
 	{
 		system("cls"); //cls
 		printChip(cycle, PC);
+		printf("Auto-Run Finished\n");
 		system("PAUSE"); // PAUSE
 	}
 	return;
@@ -3435,8 +3434,8 @@ void RunProgram(unsigned char mode)
 
 int main(int argc, char* argv[])
 {
-	// 순서대로 mode를 저장하는 변수와, 읽어들일 파일명을 저장하는 변수 선언
-	int mode = 0;
+	// 순서대로 mode와 마지막 Program Counter를 저장하는 변수와, 읽어들일 파일명을 저장하는 변수 선언
+	int mode = 0, end_PC = 0;
 	char fileName[256] = "";
 
 	// 파일명에 공백이 있는 경우를 처리한다.
@@ -3457,14 +3456,14 @@ int main(int argc, char* argv[])
 	init();
 
 	// 파일 읽기
-	fileReader(fileName);
+	end_PC = fileReader(fileName);
 	
 	// Mode 설정
-	printf("디버그 모드 : 0, 자동 작동 모드 : 1, : ");
+	printf("Debug Mode : 0, Auto-Running Mode : 1. : ");
 	scanf("%d", &mode);
 
 	// 프로그램 실행
-	RunProgram(mode);
+	RunProgram(mode, end_PC);
 
 	return 0;
 }
