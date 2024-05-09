@@ -1028,47 +1028,47 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0xC5: // XCH dir
-		fprintf(targetFile, "XCH %03XH\n", data1);
+		fprintf(targetFile, "XCH A, %03XH\n", data1);
 
 		break;
 	case 0xC6: // XCH @R0
-		fprintf(targetFile, "XCH @R0\n");
+		fprintf(targetFile, "XCH A, @R0\n");
 
 		break;
 	case 0xC7: // XCH @R1
-		fprintf(targetFile, "XCH @R1\n");
+		fprintf(targetFile, "XCH A, @R1\n");
 
 		break;
 	case 0xC8: // XCH R0
-		fprintf(targetFile, "XCH R0\n");
+		fprintf(targetFile, "XCH A, R0\n");
 
 		break;
 	case 0xC9: // XCH R1
-		fprintf(targetFile, "XCH R1\n");
+		fprintf(targetFile, "XCH A, R1\n");
 
 		break;
 	case 0xCA: // XCH R2
-		fprintf(targetFile, "XCH R2\n");
+		fprintf(targetFile, "XCH A, R2\n");
 
 		break;
 	case 0xCB: // XCH R3
-		fprintf(targetFile, "XCH R3\n");
+		fprintf(targetFile, "XCH A, R3\n");
 
 		break;
 	case 0xCC: // XCH R4
-		fprintf(targetFile, "XCH R4\n");
+		fprintf(targetFile, "XCH A, R4\n");
 
 		break;
 	case 0xCD: // XCH R5
-		fprintf(targetFile, "XCH R5\n");
+		fprintf(targetFile, "XCH A, R5\n");
 
 		break;
 	case 0xCE: // XCH R6
-		fprintf(targetFile, "XCH R6\n");
+		fprintf(targetFile, "XCH A, R6\n");
 
 		break;
 	case 0xCF: // XCH R7
-		fprintf(targetFile, "XCH R7\n");
+		fprintf(targetFile, "XCH A, R7\n");
 
 		break;
 

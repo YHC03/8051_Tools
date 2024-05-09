@@ -196,6 +196,10 @@ int process(char* fileName)
 int main(int argc, char* argv[])
 {
 	char fileName[1024] = "";
+
+	// 안내문구 출력
+	printf("8051 Assembly Code Readability Improver by YHC03\n\n");
+
 	if (argc == 1)
 	{
 		printf("No File Included!\n");

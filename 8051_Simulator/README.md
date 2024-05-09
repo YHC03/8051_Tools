@@ -36,9 +36,9 @@ HEX File의 Parity를 확인하는 기능
 MOVX를 제외한 모든 8051의 명령어  
 Timer/Counter, Interrupt 기능  
 P0-P3 Port의 Latch에 저장된 데이터 조회 기능  
+Port 입력 기능 (특정 Port만을 수정할 수는 없음. 다만, 기존값을 그대로 입력하는 것은 가능함.)  
 
 ##### 이용 불가 기능
-Port 입력 기능 비활성화됨(inputDat() 함수에서 getPortValue() 함수 호출하는 방법 이용 가능)  
 Serial 관련 기능 이용 불가(Interrupt Routine또한 구현되지 않음)  
 외부 메모리 이용 불가  
 

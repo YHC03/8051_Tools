@@ -8,10 +8,10 @@
 /*
 * 8051 Simulator
 * 
-* 제한사항 : 외장 메모리 미지원, UART 기능 미지원(입력을 못 받음)
+* 제한사항 : 외장 메모리 미지원, UART 기능 미지원
+* UART 기능의 경우, 송수신하는 데이터를 보관하는 변수의 메모리가 Overflow될 우려가 있어 구현하지 않고 있습니다.
 * 
 * 주의사항 : Regiser Indirect 사용 시, 일부 경우에만 Latch 연산을 하는 경우가 있음(다만, 8052가 아닌 8051에서는 존재할 수 없는 구문으로 알고 있음)
-* XCHD에서는 Latch 연산 안 함.
 * Carry, AC, OV는 ADD, ADDC, SUBB 함수에서만 작동함(MUL, DIV는 제조사마다 변화하는 형태가 다른 관계로 해당 값이 변화하지 않음)
 * 
 * 작성자 : YHC03
@@ -516,26 +516,30 @@ void clearInterrupt()
 void getPortValue()
 {
 	// 입력값을 받는 변수
-	unsigned char tmpData = 0;
+	int tmpData = 0;
 
 	// P0 입력
 	printf("P0 : 0x");
-	scanf("%H", &tmpData);
+	scanf("%X", &tmpData);
+	tmpData = (unsigned char)tmpData;
 	chip.internal_RAM[0x80] = chip.latch[0] & tmpData; // Latch에 0이 써진 경우, 읽지 않음
 
 	// P1 입력
 	printf("P1 : 0x");
-	scanf("%H", &tmpData);
+	scanf("%X", &tmpData);
+	tmpData = (unsigned char)tmpData;
 	chip.internal_RAM[0x90] = chip.latch[1] & tmpData; // Latch에 0이 써진 경우, 읽지 않음
 
 	// P2 입력
 	printf("P2 : 0x");
-	scanf("%H", &tmpData);
+	scanf("%X", &tmpData);
+	tmpData = (unsigned char)tmpData;
 	chip.internal_RAM[0xA0] = chip.latch[2] & tmpData; // Latch에 0이 써진 경우, 읽지 않음
 
 	// P3 입력
 	printf("P3 : 0x");
-	scanf("%H", &tmpData);
+	scanf("%X", &tmpData);
+	tmpData = (unsigned char)tmpData;
 	chip.internal_RAM[0xB0] = chip.latch[3] & tmpData; // Latch에 0이 써진 경우, 읽지 않음
 
 	// 출력이 아니므로, syncLatch() 함수는 호출하지 않는다.
@@ -1149,6 +1153,12 @@ void swapOperation(unsigned char dest, unsigned char src)
 	chip.internal_RAM[dest] = chip.internal_RAM[src];
 	chip.internal_RAM[src] = tmp;
 
+	// P0-3 Port가 Source인 경우, WriteLatch를 진행한다.
+	if (src == 0x80 || src == 0x90 || src == 0xA0 || src == 0xB0)
+	{
+		syncLatch((src - 0x80) / 0x10);
+	}
+
 	return;
 }
 
@@ -1390,8 +1400,21 @@ int fileReader(char* fileName)
 */
 void inputDat()
 {
-	system("PAUSE");
-	// getPortValue();
+	int mode = 0;
+retry:
+	// 모드 입력
+	printf("1: Pin Input, Other Number: Run Next. : ");
+	scanf("%d", &mode);
+
+	switch (mode)
+	{
+	case 1: // Pin 입력
+		getPortValue();
+		goto retry;
+
+	default: // 시작
+		return;
+	}
 
 	return;
 }
@@ -1573,8 +1596,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (tmpValue)
 		{
 			setBitAddr(C);
-		}
-		else {
+		}else{
 			clearBitAddr(C);
 		}
 		return PC;
@@ -1825,8 +1847,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (tmpValue)
 		{
 			setBitAddr(C);
-		}
-		else {
+		}else{
 			clearBitAddr(C);
 		}
 		return PC;
@@ -2936,77 +2957,77 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		chip.internal_RAM[ACC] = (chip.internal_RAM[ACC] % 16) * 16 + chip.internal_RAM[ACC] / 16;
 		return PC;
 	case 0xC5: // XCH dir
-		printf("XCH %03XH\n", data1);
+		printf("XCH A, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		swapOperation(ACC, data1);
 		return PC;
 	case 0xC6: // XCH @R0
-		printf("XCH @R0\n");
+		printf("XCH A, @R0\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		swapOperation(ACC, chip.internal_RAM[8 * PSWROM]);
 		return PC;
 	case 0xC7: // XCH @R1
-		printf("XCH @R1\n");
+		printf("XCH A, @R1\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		swapOperation(ACC, chip.internal_RAM[8 * PSWROM + 1]);
 		return PC;
 	case 0xC8: // XCH R0
-		printf("XCH R0\n");
+		printf("XCH A, R0\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		swapOperation(ACC, 8 * PSWROM);
 		return PC;
 	case 0xC9: // XCH R1
-		printf("XCH R1\n");
+		printf("XCH A, R1\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		swapOperation(ACC, 8 * PSWROM + 1);
 		return PC;
 	case 0xCA: // XCH R2
-		printf("XCH R2\n");
+		printf("XCH A, R2\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		swapOperation(ACC, 8 * PSWROM + 2);
 		return PC;
 	case 0xCB: // XCH R3
-		printf("XCH R3\n");
+		printf("XCH A, R3\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		swapOperation(ACC, 8 * PSWROM + 3);
 		return PC;
 	case 0xCC: // XCH R4
-		printf("XCH R4\n");
+		printf("XCH A, R4\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		swapOperation(ACC, 8 * PSWROM + 4);
 		return PC;
 	case 0xCD: // XCH R5
-		printf("XCH R5\n");
+		printf("XCH A, R5\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		swapOperation(ACC, 8 * PSWROM + 5);
 		return PC;
 	case 0xCE: // XCH R6
-		printf("XCH R6\n");
+		printf("XCH A, R6\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
 		swapOperation(ACC, 8 * PSWROM + 6);
 		return PC;
 	case 0xCF: // XCH R7
-		printf("XCH R7\n");
+		printf("XCH A, R7\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -3070,6 +3091,12 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		tmpValue = chip.internal_RAM[chip.internal_RAM[8 * PSWROM]] & 0x0F;
 		chip.internal_RAM[chip.internal_RAM[8 * PSWROM]] = (chip.internal_RAM[chip.internal_RAM[8 * PSWROM]] & 0xF0) + (chip.internal_RAM[ACC] & 0x0F);
 		chip.internal_RAM[ACC] = (chip.internal_RAM[ACC] & 0xF0) + tmpValue;
+
+		// P0-3 Port가 Source인 경우, WriteLatch를 진행한다.
+		if (chip.internal_RAM[8 * PSWROM] == 0x80 || chip.internal_RAM[8 * PSWROM] == 0x90 || chip.internal_RAM[8 * PSWROM] == 0xA0 || chip.internal_RAM[8 * PSWROM] == 0xB0)
+		{
+			syncLatch((chip.internal_RAM[8 * PSWROM] - 0x80) / 0x10);
+		}
 		return PC;
 	case 0xD7: // XCHD A, @R1
 		printf("XCHD A, @R1\n");
@@ -3079,6 +3106,13 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		tmpValue = chip.internal_RAM[chip.internal_RAM[8 * PSWROM + 1]] & 0x0F;
 		chip.internal_RAM[chip.internal_RAM[8 * PSWROM + 1]] = (chip.internal_RAM[chip.internal_RAM[8 * PSWROM + 1]] & 0xF0) + (chip.internal_RAM[ACC] & 0x0F);
 		chip.internal_RAM[ACC] = (chip.internal_RAM[ACC] & 0xF0) + tmpValue;
+		
+		// P0-3 Port가 Source인 경우, WriteLatch를 진행한다.
+		if (chip.internal_RAM[8 * PSWROM + 1] == 0x80 || chip.internal_RAM[8 * PSWROM + 1] == 0x90 || chip.internal_RAM[8 * PSWROM + 1] == 0xA0 || chip.internal_RAM[8 * PSWROM + 1] == 0xB0)
+		{
+			syncLatch((chip.internal_RAM[8 * PSWROM + 1] - 0x80) / 0x10);
+		}
+
 		return PC;
 	case 0xD8: // DJNZ R0, label
 		printf("DJNZ R0, %03XH\n", data1);
