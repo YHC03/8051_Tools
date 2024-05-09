@@ -38,12 +38,12 @@ Timer/Counter, Interrupt 기능
 P0-P3 Port의 Latch에 저장된 데이터 조회 기능  
 
 ##### 이용 불가 기능
-Port 입력 기능 비활성화됨(inputDat() 함수에서 getPinValue() 함수 호출하는 방법 이용 가능)  
+Port 입력 기능 비활성화됨(inputDat() 함수에서 getPortValue() 함수 호출하는 방법 이용 가능)  
 Serial 관련 기능 이용 불가(Interrupt Routine또한 구현되지 않음)  
 외부 메모리 이용 불가  
 
 ##### 주의사항
-inputDat() 함수에서 getPinValue() 함수 호출 시, P0 Port에는 외부에 Pull-Up 저항이 연결되어 있다고 가정한다.  
+inputDat() 함수에서 getPortValue() 함수 호출 시, P0 Port에는 외부에 Pull-Up 저항이 연결되어 있다고 가정한다.  
 
 ---
 ## 기획 의도
@@ -52,7 +52,8 @@ inputDat() 함수에서 getPinValue() 함수 호출 시, P0 Port에는 외부에
 ---
 ## 제작 과정에서 참고한 자료
 8051 Instruction Set  
+홍익대학교 마이크로프로세서및HDL 과목(2024학년도 1학기) 강의록  
 
 ---
 작성자 : YHC03  
-최종 작성일 : 2024/05/06  
+최종 작성일 : 2024/05/09  

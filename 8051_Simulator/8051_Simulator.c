@@ -99,7 +99,7 @@ int fileReader(char* fileName);
 unsigned char asciiToHEX(unsigned char orig); // HEX 변환
 
 // 프로그램 구동
-void RunProgram(unsigned char mode);
+void RunProgram(unsigned char mode, int end_PC);
 int programRunner(unsigned char code, unsigned char data1, unsigned char data2, int PC, char isDebugMode);
 
 // 입력 보조
@@ -146,8 +146,8 @@ int interruptControl(int PC);
 char getInterruptPriorityRun();
 void clearInterrupt();
 
-// Pin Input 가져오기
-void getPinValue();
+// Port Input 가져오기
+void getPortValue();
 
 // 함수 끝
 
@@ -159,23 +159,28 @@ void getPinValue();
 */
 void init()
 {
+	// RAM을 0으로 초기화
 	for (unsigned short i = 0; i <= 255; i++)
 	{
 		chip.internal_RAM[i] = 0;
 	}
+
+	// Stack Pointer의 값은 0x07로 초기화
 	chip.internal_RAM[SP] = 0x07;
 	
+	// Latch 초기화
 	for(unsigned short i = 0; i < 4; i++)
 	{
 		chip.latch[i] = 0;
 	}
 
-	// Pin FF 초기화(Interrupt 무시)
+	// Port의 값을 0xFF로 초기화(Interrupt 무시)
 	chip.internal_RAM[0x80] = 0xFF;
 	chip.internal_RAM[0x90] = 0xFF;
 	chip.internal_RAM[0xA0] = 0xFF;
 	chip.internal_RAM[0xB0] = 0xFF;
 
+	// 모든 Port에 대해 Latch값을 RAM의 Port 변수와 연동
 	syncLatch(0);
 	syncLatch(1);
 	syncLatch(2);
@@ -188,11 +193,11 @@ void init()
 /* timerControl() 함수
 * 
 * 기능 : timer 기능 작동
-* 입력 변수 : 지나간 cycle
+* 입력 변수 : 이번 명령어 실행에서 지나간 Cycle(현재 Cycle - 이전 Cycle 의 값)
 * 출력 변수 없음
 * 
 * 버그 : C/T 활성화 시, clock 감지 불가 오류 있음
-* Timer 3에서 버그 발생 가능
+* Timer 3에서 버그 발생 가능성 있음
 */
 void timerControl(int cycle)
 {
@@ -216,13 +221,17 @@ void timerControl(int cycle)
 				switch (chip.internal_RAM[TMOD] & 0x03)
 				{
 				case 0: // 2^13
-					
+					// !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1 는 Timer/Counter 선택이다. cycle은 Timer, 1은 외부입력(Counter)
 					if (chip.internal_RAM[TL0] + (!(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1) >= 0x100)
 					{
+						// TH0 1 증가
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
 						chip.internal_RAM[TH0]++;
+
+						// 2^13 초과 시
 						if (chip.internal_RAM[TH0] >= 0x40)
 						{
+							// Timer 초기화 후, TF0를 1로 설정
 							chip.internal_RAM[TH0] = 0;
 							setBitAddr(TF0);
 						}
@@ -230,33 +239,49 @@ void timerControl(int cycle)
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
 					}
 					break;
+
 				case 1: // 2^16
+					// !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1 는 Timer/Counter 선택이다. cycle은 Timer, 1은 외부입력(Counter)
 					if (chip.internal_RAM[TL0] + (!(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1) >= 0x100)
 					{
+						// TH0 1 증가
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
 						chip.internal_RAM[TH0]++;
+
+						// 2^16 초과 시
 						if (chip.internal_RAM[TH0] == 0)
 						{
+							// Timer 초기화 후, TF0를 1로 설정
 							setBitAddr(TF0);
 						}
 					}else{
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
 					}
 					break;
+
 				case 2: // 2^8 setup
+					// !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1 는 Timer/Counter 선택이다. cycle은 Timer, 1은 외부입력(Counter)
 					if (chip.internal_RAM[TL0] + (!(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1) >= 0x100)
 					{
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
+
+						// (Overflow가 발생한) TL0(Timer변수)에 TH0(기존값 저장한 변수) 더하기
 						chip.internal_RAM[TL0] += chip.internal_RAM[TH0];
+
+						// Timer 초기화 후, TF0를 1로 설정
 						setBitAddr(TF0);
 					}else{
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
 					}
 					break;
+
 				case 3: // 2 * 2^8
+					// !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1 는 Timer/Counter 선택이다. cycle은 Timer, 1은 외부입력(Counter). TH0(무조건 Timer)에 대해서는 뒤에서 처리
 					if (chip.internal_RAM[TL0] + (!(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1) >= 0x100)
 					{
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
+
+						// Timer 초기화 후, TF0를 1로 설정
 						setBitAddr(TF0);
 					}else{
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
@@ -269,9 +294,10 @@ void timerControl(int cycle)
 		}
 		if ((chip.internal_RAM[TMOD] & 0x03) == 0x03) // TMOD=0x03에서의 2번째 Timer는 무조건 시간에 의해서만 작동함
 		{
-			
+			// Timer3 TH0 Overflow 발생 시
 			if (chip.internal_RAM[TH0] + cycle >= 0x100)
 			{
+				// Timer 초기화 후, TF1를 1로 설정
 				chip.internal_RAM[TH0] += cycle;
 				setBitAddr(TF1);
 			}else{
@@ -296,13 +322,17 @@ void timerControl(int cycle)
 				switch (chip.internal_RAM[TMOD] & 0x30)
 				{
 				case 0x00: // 2^13
-					
+					// !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1 는 Timer/Counter 선택이다. cycle은 Timer, 1은 외부입력(Counter)
 					if (chip.internal_RAM[TL1] += (!(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1) >= 0x100)
 					{
+						// TH1 1 증가
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
 						chip.internal_RAM[TH1]++;
+
+						// 2^13 초과 시
 						if (chip.internal_RAM[TH1] >= 0x40)
 						{
+							// Timer 초기화 후, TF0를 1로 설정
 							chip.internal_RAM[TH1] = 0;
 							setBitAddr(TF1);
 						}
@@ -310,32 +340,44 @@ void timerControl(int cycle)
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
 					}
 					break;
+
 				case 0x10: // 2^16
-					
+					// !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1 는 Timer/Counter 선택이다. cycle은 Timer, 1은 외부입력(Counter)					
 					if (chip.internal_RAM[TL1] + (!(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1) >= 0x100)
 					{
+						// TH1 1 증가
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
 						chip.internal_RAM[TH1]++;
+
+						// 2^16 초과 시
 						if (chip.internal_RAM[TH1] == 0)
 						{
+							// Timer 초기화 후, TF0를 1로 설정
 							setBitAddr(TF1);
 						}
 					}else{
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
 					}
 					break;
+
 				case 0x20: // 2^8 setup
-					
+					// !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1 는 Timer/Counter 선택이다. cycle은 Timer, 1은 외부입력(Counter)
 					if (chip.internal_RAM[TL1] + (!(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1) >= 0x100)
 					{
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
+
+						// (Overflow가 발생한) TL0(Timer변수)에 TH0(기존값 저장한 변수) 더하기
 						chip.internal_RAM[TL1] = chip.internal_RAM[TH1];
+
+						// Timer 초기화 후, TF0를 1로 설정
 						setBitAddr(TF1);
 					}else{
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
 					}
 					break;
+
 				case 0x30: // STOP
+					// Timer1 Mode 3. 해당 경우에는, Timer1의 작동을 중지함.
 					clearBitAddr(TR1);
 					break;
 				}
@@ -363,48 +405,48 @@ char getInterruptPriorityRun()
 	// 이미 상위 순서가 실행중인 경우 거부
 	
 	// 0, 1, 2, 3 순서로 Priority & 실행 중이 아님을 확인(실행 중인 경우 -1)
-	if ((interruptPrior & 0x01) && intData[0] == 2)
+	if ((interruptPrior & 0x01) && intData[0] == 2) // Priority 설정한 Interrupt 0 실행 대기
 	{
 		return 0;
-	}else if ((interruptPrior & 0x01) && intData[0] == 1){
+	}else if ((interruptPrior & 0x01) && intData[0] == 1){ // Priority 설정한 Interrupt 0 실행중
 		return -1;
 
-	}else if ((interruptPrior & 0x02) && intData[1] == 2) {
+	}else if ((interruptPrior & 0x02) && intData[1] == 2) { // Priority 설정한 Interrupt 1 실행 대기
 		return 1;
-	}else if ((interruptPrior & 0x02) && intData[1] == 1) {
+	}else if ((interruptPrior & 0x02) && intData[1] == 1) { // Priority 설정한 Interrupt 1 실행중
 		return -1;
 
-	}else if ((interruptPrior & 0x04) && intData[2] == 2) {
+	}else if ((interruptPrior & 0x04) && intData[2] == 2) { // Priority 설정한 Interrupt 2 실행 대기
 		return 2;
-	}else if ((interruptPrior & 0x04) && intData[2] == 1) {
+	}else if ((interruptPrior & 0x04) && intData[2] == 1) { // Priority 설정한 Interrupt 2 실행중
 		return -1;
 
-	}else if ((interruptPrior & 0x08) && intData[3] == 2){
+	}else if ((interruptPrior & 0x08) && intData[3] == 2){ // Priority 설정한 Interrupt 3 실행 대기
 		return 3;
-	}else if ((interruptPrior & 0x08) && intData[3] == 1) {
+	}else if ((interruptPrior & 0x08) && intData[3] == 1) { // Priority 설정한 Interrupt 3 실행중
 		return -1;
 	}
 
 	// 0, 1, 2, 3 순서로 ~Priority & 실행 중이 아님을 확인(실행 중인 경우 -1)
-	if (!(interruptPrior & 0x01) && intData[0] == 2)
+	if (!(interruptPrior & 0x01) && intData[0] == 2) // Priority 설정하지 않은 Interrupt 0 실행 대기
 	{
 		return 0;
-	}else if(!(interruptPrior & 0x01) && intData[0] == 1){
+	}else if(!(interruptPrior & 0x01) && intData[0] == 1){ // Priority 설정하지 않은 Interrupt 0 실행중
 		return -1;
 
-	}else if (!(interruptPrior & 0x02) && intData[1] == 2){
+	}else if (!(interruptPrior & 0x02) && intData[1] == 2){ // Priority 설정하지 않은 Interrupt 1 실행 대기
 		return 1;
-	}else if (!(interruptPrior & 0x02) && intData[1] == 1){
+	}else if (!(interruptPrior & 0x02) && intData[1] == 1){ // Priority 설정하지 않은 Interrupt 1 실행중
 		return -1;
 
-	}else if (!(interruptPrior & 0x04) && intData[2] == 2){
+	}else if (!(interruptPrior & 0x04) && intData[2] == 2){ // Priority 설정하지 않은 Interrupt 2 실행 대기
 		return 2;
-	}else if (!(interruptPrior & 0x04) && intData[2] == 1){
+	}else if (!(interruptPrior & 0x04) && intData[2] == 1){ // Priority 설정하지 않은 Interrupt 2 실행중
 		return -1;
 
-	}else if (!(interruptPrior & 0x08) && intData[3] == 2){
+	}else if (!(interruptPrior & 0x08) && intData[3] == 2){ // Priority 설정하지 않은 Interrupt 3 실행 대기
 		return 3;
-	}else if (!(interruptPrior & 0x08) && intData[3] == 1){
+	}else if (!(interruptPrior & 0x08) && intData[3] == 1){ // Priority 설정하지 않은 Interrupt 3 실행중
 		return -1;
 	}
 
@@ -422,61 +464,73 @@ void clearInterrupt()
 	char interruptPrior = chip.internal_RAM[IP] & 0x0F;
 
 	// 0, 1, 2, 3 순서로 Priority & 실행 중 확인
-	if ((interruptPrior & 0x01) && intData[0] == 1)
+	if ((interruptPrior & 0x01) && intData[0] == 1) // Priority 설정한 Interrupt 0 실행 종료
 	{
 		intData[0] = 0;
 		return;
-	}else if ((interruptPrior & 0x02) && intData[1] == 1){
+	}else if ((interruptPrior & 0x02) && intData[1] == 1){ // Priority 설정한 Interrupt 1 실행 종료
 		intData[1] = 0;
 		return;
-	}else if ((interruptPrior & 0x04) && intData[2] == 1){
+	}else if ((interruptPrior & 0x04) && intData[2] == 1){ // Priority 설정한 Interrupt 2 실행 종료
 		intData[2] = 0;
 		return;
-	}else if ((interruptPrior & 0x08) && intData[3] == 1){
+	}else if ((interruptPrior & 0x08) && intData[3] == 1){ // Priority 설정한 Interrupt 3 실행 종료
 		intData[3] = 0;
 		return;
 	}
 
 	// 0, 1, 2, 3 순서로 ~Priority & 실행 중 확인
-	if (intData[0] == 1)
+	if (intData[0] == 1) // Priority 설정 안 한 Interrupt 0 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 	{
 		intData[0] = 0;
 		return;
-	}else if (intData[1] == 1){
+	}else if (intData[1] == 1){ // Priority 설정 안 한 Interrupt 1 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 		intData[1] = 0;
 		return;
-	}else if (intData[2] == 1){
+	}else if (intData[2] == 1){ // Priority 설정 안 한 Interrupt 2 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 		intData[2] = 0;
 		return;
-	}else if (intData[3] == 1){
+	}else if (intData[3] == 1){ // Priority 설정 안 한 Interrupt 3 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 		intData[3] = 0;
 		return;
 	}
 	
+	// 그냥 RETI가 실행된 경우 ( = RET)
 	return;
 }
 
 
-/* getPinValue() 함수
+/* getPortValue() 함수
 *
-* 기능 : Pin 값을 읽어온다.
+* 기능 : Port 값을 읽어온다.
 * 입출력 변수 없음
 */
-void getPinValue()
+void getPortValue()
 {
+	// 입력값을 받는 변수
 	unsigned char tmpData = 0;
+
+	// P0 입력
 	printf("P0 : 0x");
 	scanf("%H", &tmpData);
 	chip.internal_RAM[0x80] = chip.latch[0] & tmpData; // Latch에 0이 써진 경우, 읽지 않음
+
+	// P1 입력
 	printf("P1 : 0x");
 	scanf("%H", &tmpData);
 	chip.internal_RAM[0x90] = chip.latch[1] & tmpData; // Latch에 0이 써진 경우, 읽지 않음
+
+	// P2 입력
 	printf("P2 : 0x");
 	scanf("%H", &tmpData);
 	chip.internal_RAM[0xA0] = chip.latch[2] & tmpData; // Latch에 0이 써진 경우, 읽지 않음
+
+	// P3 입력
 	printf("P3 : 0x");
 	scanf("%H", &tmpData);
 	chip.internal_RAM[0xB0] = chip.latch[3] & tmpData; // Latch에 0이 써진 경우, 읽지 않음
+
+	// 출력이 아니므로, syncLatch() 함수는 호출하지 않는다.
 
 	return;
 }
@@ -484,12 +538,13 @@ void getPinValue()
 
 /* syncLatch() 함수
 *
-* 기능 : P0, P1, P2, P3 출력 시, Latch값 연동을 한다.
+* 기능 : 8051에서 특정 Port로 값을 출력 시, Latch값도 동일하게 한다.
 * 입력 변수 : port(P0, P1, P2, P3)
 * 출력 변수 없음
 */
 void syncLatch(char port)
 {
+	// Latch값을 8051 내부의 P0, P1, P2, P3 레지스터의 값으로 설정한다.
 	chip.latch[port] = chip.internal_RAM[0x80 + 0x10 * port];
 
 	return;
@@ -508,7 +563,7 @@ int interruptControl(int PC)
 	static char INT0 = 1;
 	static char INT1 = 1;
 
-	const unsigned char INTERRUPT_PC[4] = { 0x03, 0x0B, 0x13, 0x1B }; // Serial은 지원 안하고 지원 계획 없음.
+	const unsigned char INTERRUPT_PC[4] = { 0x03, 0x0B, 0x13, 0x1B }; // Serial은 지원 안함.
 	
 	// 이동할 인터럽트의 위치를 임시로 저장
 	char res;
@@ -589,7 +644,6 @@ int interruptControl(int PC)
 		// 다음 PC값 실행
 		return PC;
 	}
-
 }
 
 
@@ -600,19 +654,31 @@ int interruptControl(int PC)
 */
 void putParity()
 {
-	unsigned char Accumulator = chip.internal_RAM[0xE0];
+	// ACC값을 저장하는 변수 선언 및 초기화
+	unsigned char accumulator = chip.internal_RAM[ACC];
+
+	// ACC의 2진수값의 1의 갯수를 저장하는 변수 선언 및 초기화
 	unsigned char count = 0;
+
+	// unsigned char의 범위 내에서 1의 갯수를 센다.
 	for (unsigned char i = 0; i < 8; i++)
 	{
-		count += Accumulator % 2;
-		Accumulator /= 2;
+		// 해당 위치가 홀수라면, count 변수에 1을 더한다.
+		count += accumulator % 2;
+
+		// ACC값을 다음 위치로 설정한다.
+		accumulator /= 2;
 	}
+
+	// ACC의 2진수값의 1의 갯수가 홀수라면 Parity를 1로, 아니라면 Parity를 0으로 설정한다.
 	if (count % 2)
 	{
 		setBitAddr(P);
 	}else{
 		clearBitAddr(P);
 	}
+
+	return;
 }
 
 
@@ -635,6 +701,7 @@ void movFunc(short dest, short src, char isDat)
 		chip.internal_RAM[dest] = src;
 	}
 
+	// Port에 출력한 경우, 해당 Port과 Latch를 연동한다.
 	if (dest == 0x80 || dest == 0x90 || dest == 0xA0 || dest == 0xB0)
 	{
 		syncLatch((dest - 0x80) / 16);
@@ -817,6 +884,7 @@ void stackOperation(unsigned char src, int isPop)
 		// 주어진 주소에 데이터 출력 후, SP 감소
 		chip.internal_RAM[src] = chip.internal_RAM[chip.internal_RAM[SP]];
 		chip.internal_RAM[SP]--;
+
 	}else{ // PUSH면
 		// SP 증가 후, 주어진 주소의 값을 Stack에 저장
 		chip.internal_RAM[SP]++;
@@ -839,6 +907,7 @@ unsigned char stackOperationPC(unsigned char src, int isPop)
 	{
 		// 주소값 반환 후, SP 감소
 		return chip.internal_RAM[chip.internal_RAM[SP]--];
+
 	}else{
 		// SP 증가 후, 주어진 주소의 값을 Stack에 저장
 		chip.internal_RAM[SP]++;
@@ -857,19 +926,21 @@ unsigned char stackOperationPC(unsigned char src, int isPop)
 */
 void setBitAddr(unsigned char location)
 {
-	if (location <= 0x7F) // 20~2F(bit addressable ram)
+	if (location <= 0x7F) // 20~2F(bit addressable ram)의 주소인 경우
 	{
 		chip.internal_RAM[0x20 + location / 8] = chip.internal_RAM[0x20 + location / 8] | (unsigned char)pow(2, location % 8);
 
-	}else if (location <= 0xBF){ // Port0~3, ...
+	}else if (location <= 0xBF){ // Port0~3, ... 등의 0x?8~0X?F 주소가 존재하는 경우
 		if (location % 16 > 0 && location % 16 < 8) // P0~P3
 		{
-			chip.internal_RAM[(location / 16) * 16] = chip.internal_RAM[(location / 16) * 16] | (unsigned char)pow(2, location % 8);
-			chip.latch[(location - 0x80) / 16] = chip.latch[(location - 0x80) / 16] | (unsigned char)pow(2, location % 8);
+			chip.internal_RAM[(location / 16) * 16] = chip.internal_RAM[(location / 16) * 16] | (unsigned char)pow(2, location % 8); // Pin에 작성
+			chip.latch[(location - 0x80) / 16] = chip.latch[(location - 0x80) / 16] | (unsigned char)pow(2, location % 8); // Latch에 작성
+
 		}else{ // TC0N(0x88), SCON(0x98), IE(0xA8), IP(0xB8)
 			chip.internal_RAM[(location / 16) * 16 + 0x08] = chip.internal_RAM[(location / 16) * 16 + 0x08] | (unsigned char)pow(2, location % 8);
 		}
-	}else if (location <= 0xC7 || (location >= 0xD0 && location <= 0xD7) || (location >= 0xE0 && location <= 0xE7) || (location >= 0xF0 && location <= 0xF7)){
+
+	}else if (location <= 0xC7 || (location >= 0xD0 && location <= 0xD7) || (location >= 0xE0 && location <= 0xE7) || (location >= 0xF0 && location <= 0xF7)){ // 나머지(0x?8~0X?F 주소가 존재하지 않는 경우)
 		chip.internal_RAM[(location / 16) * 16] = chip.internal_RAM[(location / 16) * 16] | (unsigned char)pow(2, location % 8);
 	}
 
@@ -885,19 +956,21 @@ void setBitAddr(unsigned char location)
 */
 void clearBitAddr(unsigned char location)
 {
-	if (location <= 0x7F) // 20~2F(bit addressable ram)
+	if (location <= 0x7F) // 20~2F(bit addressable ram)의 주소인 경우
 	{
 		chip.internal_RAM[0x20 + location / 8] = chip.internal_RAM[0x20 + location / 8] & (255 - (unsigned char)pow(2, location % 8));
 
-	}else if (location <= 0xBF){ // Port0~3, ...
+	}else if (location <= 0xBF){ // Port0~3, ... 등의 0x?8~0X?F 주소가 존재하는 경우
 		if (location % 16 > 0 && location % 16 < 8) // P0~P3
 		{
-			chip.internal_RAM[(location / 16) * 16] = chip.internal_RAM[(location / 16) * 16] & (255 - (unsigned char)pow(2, location % 8));
-			chip.latch[(location - 0x80) / 16] = chip.latch[(location - 0x80) / 16] & (0xFF - (unsigned char)pow(2, location % 8));
+			chip.internal_RAM[(location / 16) * 16] = chip.internal_RAM[(location / 16) * 16] & (255 - (unsigned char)pow(2, location % 8)); // Pin에 작성
+			chip.latch[(location - 0x80) / 16] = chip.latch[(location - 0x80) / 16] & (0xFF - (unsigned char)pow(2, location % 8));  // Latch에 작성
+
 		}else{ // TC0N(0x88), SCON(0x98), IE(0xA8), IP(0xB8)
 			chip.internal_RAM[(location / 16) * 16 + 0x08] = chip.internal_RAM[(location / 16) * 16 + 0x08] & (255 - (unsigned char)pow(2, location % 8));
 		}
-	}else if (location <= 0xC7 || (location >= 0xD0 && location <= 0xD7) || (location >= 0xE0 && location <= 0xE7) || (location >= 0xF0 && location <= 0xF7)){
+
+	}else if (location <= 0xC7 || (location >= 0xD0 && location <= 0xD7) || (location >= 0xE0 && location <= 0xE7) || (location >= 0xF0 && location <= 0xF7)){ // 나머지(0x?8~0X?F 주소가 존재하지 않는 경우)
 		chip.internal_RAM[(location / 16) * 16] = chip.internal_RAM[(location / 16) * 16] & (255 - (unsigned char)pow(2, location % 8));
 	}
 	return;
@@ -912,22 +985,23 @@ void clearBitAddr(unsigned char location)
 */
 char getBitAddr(unsigned char location)
 {
-	if (location <= 0x7F) // 20~2F(bit addressable ram)
+	if (location <= 0x7F) // 20~2F(bit addressable ram)의 주소인 경우
 	{
 		// 해당 Byte Address의 해당 Bit Address의 위치가 1인 경우, 1을 반환하도록 함.
 		return !(!(chip.internal_RAM[0x20 + location / 8] & (unsigned char)pow(2, location % 8)));
 
-	}else if (location <= 0xBF){ // P0...
+	}else if (location <= 0xBF){ // Port0~3, ... 등의 0x?8~0X?F 주소가 존재하는 경우
 		if (location % 16 > 0 && location % 16 < 8) // P0~P3
 		{
 			// 해당 Byte Address의 해당 Bit Address의 위치가 1인 경우, 1을 반환하도록 함.
 			return !(!(chip.internal_RAM[(location / 16) * 16] & (unsigned char)pow(2, location % 8)));
+
 		}else{ // TCON(0x88), SCON(0x98), IE(0xA8), IP(0xB8)
 			// 해당 Byte Address의 해당 Bit Address의 위치가 1인 경우, 1을 반환하도록 함.
 			return !(!(chip.internal_RAM[(location / 16) * 16 + 0x08] & (unsigned char)pow(2, location % 8)));
 		}
 
-	}else if (location <= 0xC7 || (location >= 0xD0 && location <= 0xD7) || (location >= 0xE0 && location <= 0xE7) || (location >= 0xF0 && location <= 0xF7)){
+	}else if (location <= 0xC7 || (location >= 0xD0 && location <= 0xD7) || (location >= 0xE0 && location <= 0xE7) || (location >= 0xF0 && location <= 0xF7)){ // 나머지(0x?8~0X?F 주소가 존재하지 않는 경우)
 		// 해당 Byte Address의 해당 Bit Address의 위치가 1인 경우, 1을 반환하도록 함.
 		return !(!(chip.internal_RAM[(location / 16) * 16] & (unsigned char)pow(2, location % 8)));
 	}
@@ -942,7 +1016,7 @@ char getBitAddr(unsigned char location)
 * 입력 변수 : destination, source, isDat(상수 여부), isBit(bit 주소 여부, -1인 경우 반대 bit값)
 * 출력 변수 없음
 */
-void orOperation(unsigned char dest, unsigned char src, char isData, char isBit) // isBit 0(byte), 1(bit), -1(bit transpose)
+void orOperation(unsigned char dest, unsigned char src, char isData, char isBit) // isBit : 0(byte), 1(bit), -1(bit transpose)
 {
 	if (isBit) // Bit 주소의 경우
 	{
@@ -952,19 +1026,24 @@ void orOperation(unsigned char dest, unsigned char src, char isData, char isBit)
 		}else{
 			clearBitAddr(C);
 		}
+
 	}else{ // Byte 주소의 경우
-		if (isData == 1)
+		if (isData == 1) // 데이터 입력인 경우
 		{
 			chip.internal_RAM[dest] |= src;
-		}else{
-			if (src == 0x80 || src == 0x90 || src == 0xA0 || src == 0xB0)
+
+		}else{ // 주소 입력인 경우
+			if (src == 0x80 || src == 0x90 || src == 0xA0 || src == 0xB0) // Port 주소인 경우
 			{
+				// 이 경우, Read-Modify-Write이므로, Latch의 값을 반전한다.
 				chip.internal_RAM[dest] |= chip.latch[(src - 0x80) / 16];
-			}else{
+
+			}else{ // Port 주소가 아닌 경우
 				chip.internal_RAM[dest] |= chip.internal_RAM[src];
 			}
 		}
 
+		// Port 주소인 경우, 해당 Port의 값을 Latch에 연동한다.
 		if (dest == 0x80 || dest == 0x90 || dest == 0xA0 || dest == 0xB0)
 		{
 			syncLatch((dest - 0x80) / 16);
@@ -981,7 +1060,7 @@ void orOperation(unsigned char dest, unsigned char src, char isData, char isBit)
 * 입력 변수 : destination, source, isDat(상수 여부), isBit(bit 주소 여부, -1인 경우 반대 bit값)
 * 출력 변수 없음
 */
-void andOperation(unsigned char dest, unsigned char src, char isData, char isBit) // isBit 0(byte), 1(bit), -1(bit transpose)
+void andOperation(unsigned char dest, unsigned char src, char isData, char isBit) // isBit : 0(byte), 1(bit), -1(bit transpose)
 {
 	if (isBit) // Bit 주소의 경우
 	{
@@ -991,19 +1070,24 @@ void andOperation(unsigned char dest, unsigned char src, char isData, char isBit
 		}else{
 			clearBitAddr(C);
 		}
+
 	}else{ // Byte 주소의 경우
-		if (isData == 1)
+		if (isData == 1) // 데이터 입력인 경우
 		{
 			chip.internal_RAM[dest] &= src;
-		}else{
-			if (src == 0x80 || src == 0x90 || src == 0xA0 || src == 0xB0)
+
+		}else{ // 주소 입력인 경우
+			if (src == 0x80 || src == 0x90 || src == 0xA0 || src == 0xB0) // Port 주소인 경우
 			{
+				// 이 경우, Read-Modify-Write이므로, Latch의 값을 반전한다.
 				chip.internal_RAM[dest] &= chip.latch[(src - 0x80) / 16];
-			}else{
+
+			}else{ // Port 주소가 아닌 경우
 				chip.internal_RAM[dest] &= chip.internal_RAM[src];
 			}
 		}
 
+		// Port 주소인 경우, 해당 Port의 값을 Latch에 연동한다.
 		if (dest == 0x80 || dest == 0x90 || dest == 0xA0 || dest == 0xB0)
 		{
 			syncLatch((dest - 0x80) / 16);
@@ -1022,18 +1106,22 @@ void andOperation(unsigned char dest, unsigned char src, char isData, char isBit
 */
 void xorOperation(unsigned char dest, unsigned char src, char isData)
 {
-	if (isData == 1)
+	if (isData == 1) // 데이터 입력인 경우
 	{
 		chip.internal_RAM[dest] ^= src;
-	}else{
-		if (src == 0x80 || src == 0x90 || src == 0xA0 || src == 0xB0)
+
+	}else{ // 주소 입력인 경우
+		if (src == 0x80 || src == 0x90 || src == 0xA0 || src == 0xB0) // Port 주소인 경우
 		{
+			// 이 경우, Read-Modify-Write이므로, Latch의 값을 반전한다.
 			chip.internal_RAM[dest] ^= chip.latch[(src - 0x80) / 16];
-		}else{
+
+		}else{ // Port 주소가 아닌 경우
 			chip.internal_RAM[dest] ^= chip.internal_RAM[src];
 		}
 	}
 
+	// Port 주소인 경우, 해당 Port의 값을 Latch에 연동한다.
 	if (dest == 0x80 || dest == 0x90 || dest == 0xA0 || dest == 0xB0)
 	{
 		syncLatch((dest - 0x80) / 16);
@@ -1066,26 +1154,37 @@ void swapOperation(unsigned char dest, unsigned char src)
 */
 void DAOperation()
 {
-	unsigned char upper, under;
-	upper = chip.internal_RAM[0xE0] & 0xF0;
+	unsigned char upper, under; // 각각 ACC의 상위 4bit과 하위 4bit
+	upper = chip.internal_RAM[ACC] & 0xF0;
 	upper /= 16;
-	under = chip.internal_RAM[0xE0] & 0x0F;
+	under = chip.internal_RAM[ACC] & 0x0F;
 
-	if (under > 10 || getBitAddr(AC))
+	// 하위 4bit값이 10 이상이거나, AC값이 1인 경우
+	if (under >= 10 || getBitAddr(AC))
 	{
+		// 상위 4bit값에 1을 더하며, 하위 4bit값에 6을 더한다.
+		upper++;
 		under += 6;
 	}
-	if (upper > 10 || getBitAddr(C))
+
+	// 상위 4bit값이 10 이상이거나, Carry값이 1인 경우
+	if (upper >= 10 || getBitAddr(C))
 	{
+		// Carry값을 1로 설정하며, 상위 4bit값에 6을 더한다.
+		setBitAddr(C);
 		upper += 6;
 	}
+
+	// 상, 하위 4bit값을 16진수로 1의 자릿수만 남긴다.
 	upper %= 16;
 	under %= 16;
 
-	chip.internal_RAM[0xE0] = upper * 16 + under;
+	// 결과를 ACC에 저장한다.
+	chip.internal_RAM[ACC] = upper * 16 + under;
 
 	return;
 }
+
 
 /* printChip() 함수
 *
@@ -1105,7 +1204,7 @@ void printChip(unsigned long long int cycle, int programCounter)
 	}
 	printf("\n");
 
-
+	// 모든 RAM의 값 출력
 	for (int i = 0; i < 16; i++)
 	{
 		// Index 출력
@@ -1143,7 +1242,7 @@ void printChip(unsigned long long int cycle, int programCounter)
 		chip.internal_RAM[TCON] / 0x01 % 0x02);
 
 	// 구분선과 안내문 출력
-	printf("--------------------------------------------------\n<Latch Data>\n    7 6 5 4 3 2 1 0\n");
+	printf("--------------------------------------------------\n<LATCH DATA>\n    7 6 5 4 3 2 1 0\n");
 
 	for (char i = 0; i < 4; i++)
 	{
@@ -1272,20 +1371,21 @@ int fileReader(char* fileName)
 	// 파일 읽기를 성공했다고 출력한다.
 	printf("File Read Finished with No Error\n");
 
+	// 파일의 마지막 Program Counter값을 반환한다.
 	return prev_PC + prev_REM;
 }
 
 
 /* inputDat() 함수
 *
-* 기능 : Pin Data Input 등의 입력 값이 필요한 경우 이를 수행할 수 있도록 한다.
+* 기능 : Port Data Input 등의 입력 값이 필요한 경우 이를 수행할 수 있도록 한다.
 * 입력 변수 없음
 * 출력 변수 없음
 */
 void inputDat()
 {
 	system("PAUSE");
-	// getPinValue();
+	// getPortValue();
 
 	return;
 }
@@ -2660,18 +2760,15 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 			if (chip.latch[(data1 - 0x80) / 16] & (unsigned char)pow(2, data1 % 16))
 			{
 				clearBitAddr(data1);
-			}
-			else {
+			}else{
 				setBitAddr(data1);
 			}
 
-		}
-		else {
+		}else{
 			if (getBitAddr(data1))
 			{
 				clearBitAddr(data1);
-			}
-			else {
+			}else{
 				setBitAddr(data1);
 			}
 		}
@@ -2684,8 +2781,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (getBitAddr(C))
 		{
 			clearBitAddr(C);
-		}
-		else {
+		}else{
 			setBitAddr(C);
 		}
 		return PC;
@@ -3338,7 +3434,7 @@ void RunProgram(unsigned char mode, int end_PC)
 	// 종료 여부 확인 변수
 	int isEnd = 0;
 
-
+	// 파일 종료까지 반복
 	while (!isEnd)
 	{
 
@@ -3360,6 +3456,7 @@ void RunProgram(unsigned char mode, int end_PC)
 		tmp_Code = ROM[PC];
 		PC++;
 
+		// 자동 실행 모드에서, Program Counter가 Overflow된 경우, 프로그램 종료
 		if (PC == 0 && mode) { isEnd = 1; }
 
 
@@ -3376,6 +3473,7 @@ void RunProgram(unsigned char mode, int end_PC)
 			}
 		}
 
+		// 자동 실행 모드에서, Program Counter가 Overflow된 경우, 프로그램 종료
 		if (PC == 0 && mode) { isEnd = 1; }
 
 
@@ -3392,6 +3490,7 @@ void RunProgram(unsigned char mode, int end_PC)
 			}
 		}
 
+		// 자동 실행 모드에서, Program Counter가 Overflow된 경우, 프로그램 종료
 		if (PC == 0 && mode) { isEnd = 1; }
 
 
@@ -3416,17 +3515,22 @@ void RunProgram(unsigned char mode, int end_PC)
 			}
 		}
 
-
+		// 자동 실행 모드에서, Program Counter가 파일 끝을 넘어간 경우, 실행 종료
 		if (PC > end_PC && mode){ isEnd = 1; }
 
-		timerControl(cycle - prevCycle); // Timer 설정
+		// Timer 계산
+		timerControl(cycle - prevCycle);
 
 		// 프로그램 실행
 		PC = programRunner(tmp_Code, dat1, dat2, PC, mode); // 해당 명령어 실행
 		putParity(); // Parity 계산
 
-		if (PC > end_PC && mode) { isEnd = 1; } // 자동 실행 모드에서, Program Counter가 파일 끝을 넘어간 경우, 실행 종료
-		if (mode && (prev_PC > PC)) { break; } // 자동 실행 모드에서, Program Counter가 Overflow시, 실행 종료 (다만, 실행 시간이 매우 오래 걸림)
+
+		// 자동 실행 모드에서, Program Counter가 파일 끝을 넘어간 경우, 실행 종료
+		if (PC > end_PC && mode) { isEnd = 1; }
+
+		// 자동 실행 모드에서, Program Counter가 Overflow시, 실행 종료 (다만, 실행 시간이 매우 오래 걸림)
+		if (mode && (prev_PC > PC)) { break; }
 	}
 
 	if (mode) // 자동 실행 모드에서, 결괏값 출력
@@ -3436,6 +3540,7 @@ void RunProgram(unsigned char mode, int end_PC)
 		printf("Auto-Run Finished\n");
 		system("PAUSE"); // PAUSE
 	}
+
 	return;
 }
 
