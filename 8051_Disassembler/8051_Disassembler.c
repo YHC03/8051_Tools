@@ -16,14 +16,14 @@ unsigned char ROM[65535];
 
 
 // 특수 명령어 Bytes
-const unsigned char TWO_BYTES[] = {0x01, 0x05, 0x11, 0x15, 0x21, 0x24, 0x25, 0x31, 0x34,
+const unsigned char TWO_BYTES[91] = {0x01, 0x05, 0x11, 0x15, 0x21, 0x24, 0x25, 0x31, 0x34,
 0x35, 0x40, 0x41, 0x42, 0x44, 0x45, 0x50, 0x51, 0x52, 0x54, 0x55, 0x60, 0x61, 0x62, 0x64,
 0x65, 0x70, 0x71, 0x72, 0x74, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F,
 0x80, 0x81, 0x82, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F, 0x91, 0x92,
 0x94, 0x95, 0xA0, 0XA1, 0xA2, 0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF,
 0xB0, 0xB1, 0xB2, 0xC1, 0xC2, 0xC3, 0xC5, 0xD0, 0xD1, 0xD2, 0xD8, 0xD9, 0xDA, 0xDB, 0xDC,
 0xDD, 0xDE, 0xDF, 0xE1, 0xE5, 0xF1, 0xF5};
-const unsigned char THREE_BYTES[] = { 0x02, 0x10, 0x12, 0x21, 0x30, 0x43, 0x53, 0x63, 0x75,
+const unsigned char THREE_BYTES[24] = { 0x02, 0x10, 0x12, 0x21, 0x30, 0x43, 0x53, 0x63, 0x75,
 0x85, 0x90, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF, 0xD5 };
 
 
@@ -112,7 +112,7 @@ int fileReader(char* fileName)
 		}
 
 		// 이전값 저장 후
-		prev_PC = tmp_PC - prev_REM;
+		prev_PC = tmp_PC;
 		prev_REM = tmp_REM;
 
 		// 해당 줄의 명령어 개수를 읽고
@@ -242,7 +242,12 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		// 0x10-Ox1F
 
 	case 0x10: // JBC
-		fprintf(targetFile, "JBC %03XH, %03XH\n", data1, data2);
+		if (data2 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
+		{
+			fprintf(targetFile, "JBC %03XH, -%d\n", data1, 0x100 - data2);
+		}else{
+			fprintf(targetFile, "JBC %03XH, %XH\n", data1, data2);
+		}
 
 		break;
 	case 0x11: // ACALL
@@ -308,7 +313,12 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		// 0x20-0x2F
 	case 0x20: // JB
-		fprintf(targetFile, "JB %03XH, %03XH\n", data1, data2);
+		if (data2 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
+		{
+			fprintf(targetFile, "JB %03XH, -%d\n", data1, 0x100 - data2);
+		}else{
+			fprintf(targetFile, "JB %03XH, %XH\n", data1, data2);
+		}
 
 		break;
 	case 0x21: // AJMP
@@ -374,7 +384,12 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		// 0x30-Ox3F
 	case 0x30: // JNB
-		fprintf(targetFile, "JNB %03XH, %03XH\n", data1, data2);
+		if (data2 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
+		{
+			fprintf(targetFile, "JNB %03XH, -%d\n", data1, 0x100 - data2);
+		}else{
+			fprintf(targetFile, "JNB %03XH, %XH\n", data1, data2);
+		}
 
 		break;
 	case 0x31: // ACALL
@@ -440,7 +455,12 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		// 0x40-0x4F
 	case 0x40: // JC
-		fprintf(targetFile, "JC %03XH\n", data1);
+		if (data1 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
+		{
+			fprintf(targetFile, "JC -%d\n", 0x100 - data1);
+		}else{
+			fprintf(targetFile, "JC %XH\n", data1);
+		}
 
 		break;
 	case 0x41: // AJMP
@@ -506,7 +526,12 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		// 0x50-0x5F
 	case 0x50: // JNC
-		fprintf(targetFile, "JNC %03XH\n", data1);
+		if (data1 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
+		{
+			fprintf(targetFile, "JNC -%d\n", 0x100 - data1);
+		}else{
+			fprintf(targetFile, "JNC %XH\n", data1);
+		}
 
 		break;
 	case 0x51: // ACALL
@@ -572,7 +597,12 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		// 0x60-0x6F
 	case 0x60: // JZ
-		fprintf(targetFile, "JZ %03XH\n", data1);
+		if (data1 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
+		{
+			fprintf(targetFile, "JZ -%d\n", 0x100 - data1);
+		}else{
+			fprintf(targetFile, "JZ %XH\n", data1);
+		}
 
 		break;
 	case 0x61: // AJMP
@@ -638,7 +668,12 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		// 0x70 - 0x7F
 	case 0x70: // JNZ
-		fprintf(targetFile, "JNZ %03XH\n", data1);
+		if (data1 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
+		{
+			fprintf(targetFile, "JNZ -%d\n", 0x100 - data1);
+		}else{
+			fprintf(targetFile, "JNZ %XH\n", data1);
+		}
 
 		break;
 	case 0x71: // ACALL
@@ -703,7 +738,12 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		// 0x80-0x8F
 	case 0x80: // SJMP
-		fprintf(targetFile, "SJMP %03XH\n", data1);
+		if(data1 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
+		{
+			fprintf(targetFile, "SJMP -%d\n", 0x100 - data1);
+		}else{
+			fprintf(targetFile, "SJMP %XH\n", data1); 
+		}
 
 		break;
 
@@ -769,7 +809,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		break;
 
 		// 0x90-0x9F
-	case 0x90: // JB
+	case 0x90: // MOV DPTR, #data
 		fprintf(targetFile, "MOV DPTR, #%05XH\n", data1 * 0x100 + data2);
 
 		break;
@@ -1302,7 +1342,7 @@ void RunProgram(char* fileName, int end_PC)
 
 			// 명령어 길이 계산
 			bytes = 1;
-			for(int i = 0; 0xF5 != TWO_BYTES[i]; i++) // 2byte 명령어인지 확인
+			for(int i = 0; i < 91; i++) // 2byte 명령어인지 확인
 			{
 				if (TWO_BYTES[i] == tmp_Code)
 				{
@@ -1315,7 +1355,7 @@ void RunProgram(char* fileName, int end_PC)
 
 			if (PC == 0) { isEnd = 1; }
 
-			for(int i = 0; 0xD5 != THREE_BYTES[i]; i++) // 3byte 명령어인지 확인
+			for(int i = 0; i < 24; i++) // 3byte 명령어인지 확인
 			{
 				if (THREE_BYTES[i] == tmp_Code)
 				{
@@ -1363,6 +1403,9 @@ int main(int argc, char* argv[])
 	// 순서대로 eof를 저장하는 변수와, 읽어들일 파일명을 저장하는 변수 선언
 	int eof = 0;
 	char fileName[256] = "", targetFileName[256] = "";
+
+	// 안내문구 출력
+	printf("8051 Disassembler by YHC03\n\n");
 
 	// 파일명에 공백이 있는 경우를 처리한다.
 	for (int i = 1; i < argc; i++)
