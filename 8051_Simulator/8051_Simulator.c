@@ -208,11 +208,11 @@ void timerControl(int cycle)
 	// TRO 활성화시
 	if (getBitAddr(TR0))
 	{
-		// GATE=0 혹은 GATE=1이면서 INT0=0
-		if (!(chip.internal_RAM[TMOD] & 0x08) || ((chip.internal_RAM[TMOD] & 0x08) && !getBitAddr(0xB2)/*P3.3*/))
+		// GATE=0 혹은 GATE=1이면서 INT0=1
+		if (!(chip.internal_RAM[TMOD] & 0x08) || getBitAddr(0xB2)/*P3.3*/)
 		{
-			// C/T=1이면서 T0=(0->1) 혹은 C/T=0
-			if ((getBitAddr(0xA4/*P3.4*/) && !T0) || !(chip.internal_RAM[TMOD] & 0x04))
+			// C/T=1이면서 T0=(1->0) 혹은 C/T=0
+			if ((!getBitAddr(0xA4/*P3.4*/) && T0) || !(chip.internal_RAM[TMOD] & 0x04))
 			{
 				// T0값 저장
 				T0 = getBitAddr(0xA4/*P3.4*/);
@@ -233,7 +233,7 @@ void timerControl(int cycle)
 						// 2^13(TL0: 2^5 -> TH0: 2^8) 초과 시
 						if (chip.internal_RAM[TH0] == 0)
 						{
-							// Timer 초기화 후, TF0를 1로 설정
+							// Timer0 초기화 후, TF0를 1로 설정
 							chip.internal_RAM[TH0] = 0;
 							setBitAddr(TF0);
 						}
@@ -253,7 +253,7 @@ void timerControl(int cycle)
 						// 2^16 초과 시
 						if (chip.internal_RAM[TH0] == 0)
 						{
-							// Timer 초기화 후, TF0를 1로 설정
+							// Timer0 초기화 후, TF0를 1로 설정
 							setBitAddr(TF0);
 						}
 					}else{
@@ -270,7 +270,7 @@ void timerControl(int cycle)
 						// (Overflow가 발생한) TL0(Timer변수)에 TH0(기존값 저장한 변수) 더하기
 						chip.internal_RAM[TL0] += chip.internal_RAM[TH0];
 
-						// Timer 초기화 후, TF0를 1로 설정
+						// Timer0 초기화 후, TF0를 1로 설정
 						setBitAddr(TF0);
 					}else{
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
@@ -283,7 +283,7 @@ void timerControl(int cycle)
 					{
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
 
-						// Timer 초기화 후, TF0를 1로 설정
+						// Timer0(TL0) 초기화 후, TF0를 1로 설정
 						setBitAddr(TF0);
 					}else{
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
@@ -299,7 +299,7 @@ void timerControl(int cycle)
 			// Timer3 TH0 Overflow 발생 시
 			if (chip.internal_RAM[TH0] + cycle >= 0x100)
 			{
-				// Timer 초기화 후, TF1를 1로 설정
+				// Timer0(TH0) 초기화 후, TF1를 1로 설정
 				chip.internal_RAM[TH0] += cycle;
 				setBitAddr(TF1);
 			}else{
@@ -311,11 +311,11 @@ void timerControl(int cycle)
 	// TR1 활성화시
 	if (getBitAddr(TR1))
 	{
-		// GATE=0 혹은 GATE=1이면서 INT1=0
-		if (!(chip.internal_RAM[TMOD] & 0x80) || ((chip.internal_RAM[TMOD] & 0x80) && !getBitAddr(0xB2)/*P3.3*/))
+		// GATE=0 혹은 GATE=1이면서 INT1=1
+		if (!(chip.internal_RAM[TMOD] & 0x80) || getBitAddr(0xB2)/*P3.3*/)
 		{
-			// C/T=1이면서 T1=(0->1) 혹은 C/T=0
-			if ((getBitAddr(0xA5/*P3.5*/) && !T1) || !(chip.internal_RAM[TMOD] & 0x40))
+			// C/T=1이면서 T1=(1->0) 혹은 C/T=0
+			if ((!getBitAddr(0xA5/*P3.5*/) && T1) || !(chip.internal_RAM[TMOD] & 0x40))
 			{
 				// T1값 저장
 				T1 = getBitAddr(0xA5/*P3.5*/);
@@ -326,7 +326,7 @@ void timerControl(int cycle)
 				case 0x00: // 2^13
 					// !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1 는 Timer/Counter 선택이다. cycle은 Timer, 1은 외부입력(Counter)
 					// Timer Mode 0은 TL1가 0x20 이상이면 TH1의 값을 1 증가시키며, TH1 Overflow 발생 시 TF1을 1로 바꾼다.
-					if (chip.internal_RAM[TL1] += (!(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1) >= 0x20)
+					if (chip.internal_RAM[TL1] + (!(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1) >= 0x20)
 					{
 						// TH1 1 증가 및 TL1 초기화(기존값에 Cycle만큼 더한 값에서 0x20 빼기)
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
@@ -336,7 +336,7 @@ void timerControl(int cycle)
 						// 2^13(TL1: 2^5 -> TH1: 2^8) 초과 시
 						if (chip.internal_RAM[TH1] == 0)
 						{
-							// Timer 초기화 후, TF0를 1로 설정
+							// Timer1 초기화 후, TF1를 1로 설정
 							chip.internal_RAM[TH1] = 0;
 							setBitAddr(TF1);
 						}
@@ -356,7 +356,7 @@ void timerControl(int cycle)
 						// 2^16 초과 시
 						if (chip.internal_RAM[TH1] == 0)
 						{
-							// Timer 초기화 후, TF0를 1로 설정
+							// Timer1 초기화 후, TF1를 1로 설정
 							setBitAddr(TF1);
 						}
 					}else{
@@ -371,9 +371,9 @@ void timerControl(int cycle)
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
 
 						// (Overflow가 발생한) TL0(Timer변수)에 TH0(기존값 저장한 변수) 더하기
-						chip.internal_RAM[TL1] = chip.internal_RAM[TH1];
+						chip.internal_RAM[TL1] += chip.internal_RAM[TH1];
 
-						// Timer 초기화 후, TF0를 1로 설정
+						// Timer1 초기화 후, TF1를 1로 설정
 						setBitAddr(TF1);
 					}else{
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
@@ -416,6 +416,7 @@ char getInterruptPriorityRun()
 		return -1;
 
 	}else if ((interruptPrior & 0x02) && intData[1] == 2) { // Priority 설정한 Interrupt 1 실행 대기
+		clearBitAddr(TF0);
 		return 1;
 	}else if ((interruptPrior & 0x02) && intData[1] == 1) { // Priority 설정한 Interrupt 1 실행중
 		return -1;
@@ -426,6 +427,7 @@ char getInterruptPriorityRun()
 		return -1;
 
 	}else if ((interruptPrior & 0x08) && intData[3] == 2){ // Priority 설정한 Interrupt 3 실행 대기
+		clearBitAddr(TF1);
 		return 3;
 	}else if ((interruptPrior & 0x08) && intData[3] == 1) { // Priority 설정한 Interrupt 3 실행중
 		return -1;
@@ -439,6 +441,7 @@ char getInterruptPriorityRun()
 		return -1;
 
 	}else if (!(interruptPrior & 0x02) && intData[1] == 2){ // Priority 설정하지 않은 Interrupt 1 실행 대기
+		clearBitAddr(TF0);
 		return 1;
 	}else if (!(interruptPrior & 0x02) && intData[1] == 1){ // Priority 설정하지 않은 Interrupt 1 실행중
 		return -1;
@@ -449,6 +452,7 @@ char getInterruptPriorityRun()
 		return -1;
 
 	}else if (!(interruptPrior & 0x08) && intData[3] == 2){ // Priority 설정하지 않은 Interrupt 3 실행 대기
+		clearBitAddr(TF1);
 		return 3;
 	}else if (!(interruptPrior & 0x08) && intData[3] == 1){ // Priority 설정하지 않은 Interrupt 3 실행중
 		return -1;
@@ -605,7 +609,6 @@ int interruptControl(int PC)
 		if (getBitAddr(TF0))
 		{
 			intData[1] = 2;
-			clearBitAddr(TF0);
 		}
 	}
 
@@ -625,7 +628,6 @@ int interruptControl(int PC)
 		if (getBitAddr(TF1))
 		{
 			intData[3] = 2;
-			clearBitAddr(TF1);
 		}
 	}
 
@@ -3441,20 +3443,19 @@ void RunProgram(unsigned char mode, int end_PC)
 	// 파일 종료까지 반복
 	while (!isEnd)
 	{
-
-		// 디버그 모드인 경우 출력
-		if (!mode)
-		{
-			system("cls"); //cls
-			printChip(cycle, PC);
-		}
-
 		// 기존값 저장
 		prevCycle = cycle;
 		prev_PC = PC;
 
 		// Interrupt 계산
 		PC = interruptControl(PC);
+
+		// 디버그 모드인 경우 출력
+		if (!mode)
+		{
+			system("cls"); //cls
+			printChip(cycle, PC); // prevCycle, prev_PC 대신 사용 가능. Cycle과 Program Counter값 변경 시 prevCycle, prev_PC로 바꿀 것.
+		}
 
 		// 실행할 명령 코드를 가져온 후, PC값 1 증가
 		tmp_Code = ROM[PC];
@@ -3524,6 +3525,7 @@ void RunProgram(unsigned char mode, int end_PC)
 
 		// Timer 계산
 		timerControl(cycle - prevCycle);
+
 
 		// 프로그램 실행
 		PC = programRunner(tmp_Code, dat1, dat2, PC, mode); // 해당 명령어 실행
