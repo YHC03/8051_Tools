@@ -211,7 +211,7 @@ void timerControl(int cycle)
 		// GATE=0 혹은 GATE=1이면서 INT0=0
 		if (!(chip.internal_RAM[TMOD] & 0x08) || ((chip.internal_RAM[TMOD] & 0x08) && !getBitAddr(0xB2)/*P3.3*/))
 		{
-			// C/T=1이면서 T0=0->1 혹은 C/T=0
+			// C/T=1이면서 T0=(0->1) 혹은 C/T=0
 			if ((getBitAddr(0xA4/*P3.4*/) && !T0) || !(chip.internal_RAM[TMOD] & 0x04))
 			{
 				// T0값 저장
@@ -222,14 +222,16 @@ void timerControl(int cycle)
 				{
 				case 0: // 2^13
 					// !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1 는 Timer/Counter 선택이다. cycle은 Timer, 1은 외부입력(Counter)
-					if (chip.internal_RAM[TL0] + (!(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1) >= 0x100)
+					// Timer Mode 0은 TL0가 0x20 이상이면 TH0의 값을 1 증가시키며, TH0 Overflow 발생 시 TF0을 1로 바꾼다.
+					if (chip.internal_RAM[TL0] + (!(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1) >= 0x20)
 					{
 						// TH0 1 증가
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
+						chip.internal_RAM[TL0] -= 0x20;
 						chip.internal_RAM[TH0]++;
 
-						// 2^13 초과 시
-						if (chip.internal_RAM[TH0] >= 0x40)
+						// 2^13(TL0: 2^5 -> TH0: 2^8) 초과 시
+						if (chip.internal_RAM[TH0] == 0)
 						{
 							// Timer 초기화 후, TF0를 1로 설정
 							chip.internal_RAM[TH0] = 0;
@@ -244,7 +246,7 @@ void timerControl(int cycle)
 					// !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1 는 Timer/Counter 선택이다. cycle은 Timer, 1은 외부입력(Counter)
 					if (chip.internal_RAM[TL0] + (!(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1) >= 0x100)
 					{
-						// TH0 1 증가
+						// TH0 1 증가 및 TL0 초기화(기존값에 Cycle만큼 더한 값에서 0x20 빼기)
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
 						chip.internal_RAM[TH0]++;
 
@@ -312,7 +314,7 @@ void timerControl(int cycle)
 		// GATE=0 혹은 GATE=1이면서 INT1=0
 		if (!(chip.internal_RAM[TMOD] & 0x80) || ((chip.internal_RAM[TMOD] & 0x80) && !getBitAddr(0xB2)/*P3.3*/))
 		{
-			// C/T=1이면서 T1=0->1 혹은 C/T=0
+			// C/T=1이면서 T1=(0->1) 혹은 C/T=0
 			if ((getBitAddr(0xA5/*P3.5*/) && !T1) || !(chip.internal_RAM[TMOD] & 0x40))
 			{
 				// T1값 저장
@@ -323,14 +325,16 @@ void timerControl(int cycle)
 				{
 				case 0x00: // 2^13
 					// !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1 는 Timer/Counter 선택이다. cycle은 Timer, 1은 외부입력(Counter)
-					if (chip.internal_RAM[TL1] += (!(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1) >= 0x100)
+					// Timer Mode 0은 TL1가 0x20 이상이면 TH1의 값을 1 증가시키며, TH1 Overflow 발생 시 TF1을 1로 바꾼다.
+					if (chip.internal_RAM[TL1] += (!(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1) >= 0x20)
 					{
-						// TH1 1 증가
+						// TH1 1 증가 및 TL1 초기화(기존값에 Cycle만큼 더한 값에서 0x20 빼기)
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
+						chip.internal_RAM[TL1] -= 0x20;
 						chip.internal_RAM[TH1]++;
 
-						// 2^13 초과 시
-						if (chip.internal_RAM[TH1] >= 0x40)
+						// 2^13(TL1: 2^5 -> TH1: 2^8) 초과 시
+						if (chip.internal_RAM[TH1] == 0)
 						{
 							// Timer 초기화 후, TF0를 1로 설정
 							chip.internal_RAM[TH1] = 0;
