@@ -88,7 +88,7 @@ int fileReader(char* fileName)
 	if (hexFile == NULL)
 	{
 		// 파일이 없는 경우, 파일이 없다고 출력한다.
-		printf("File Not Found\n");
+		printf("File Not Found at %s\n", fileName);
 		exit(1);
 	}
 
@@ -1401,7 +1401,7 @@ void RunProgram(char* fileName, int end_PC)
 int main(int argc, char* argv[])
 {
 	// 순서대로 eof를 저장하는 변수와, 읽어들일 파일명을 저장하는 변수 선언
-	int eof = 0;
+	int eof = 0, isFirst0 = 1;
 	char fileName[256] = "", targetFileName[256] = "";
 
 	// 안내문구 출력
@@ -1414,16 +1414,21 @@ int main(int argc, char* argv[])
 		strcat(fileName, " ");
 	}
 	
-	for (int i = 0; i <= strlen(fileName); i++)
+	isFirst0 = 1;
+	for (int i = strlen(fileName); i >= 0; i--)
 	{
 		targetFileName[i] = fileName[i];
+
+		// Target 파일은 .a51로 변경
+		if (fileName[i] == '.' && isFirst0)
+		{
+			targetFileName[i + 1] = 'a';
+			targetFileName[i + 2] = '5';
+			targetFileName[i + 3] = '1';
+			targetFileName[i + 4] = '\0';
+			isFirst0 = 0;
+		}
 	}
-
-	// Target 파일은 .a51로 변경
-	targetFileName[strlen(fileName) - 4] = 'a';
-	targetFileName[strlen(fileName) - 3] = '5';
-	targetFileName[strlen(fileName) - 2] = '1';
-
 
 	// 파일을 추가하지 않은 경우
 	if (argc == 1)
