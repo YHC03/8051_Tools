@@ -49,15 +49,24 @@ int process(char* fileName)
 	fileRead = fopen(fileName, "r");
 	if (fileRead == NULL)
 	{
-		printf("File Not Found!\n");
+		printf("File Not Found at %s\n", fileName);
 		return 1;
 	}
 
 	// 출력 파일명은 입력 파일명 뒤에 _Processed 붙이기
 	char writeName[1024] = "";
-	strncpy(writeName, fileName, strlen(fileName) - 5);
+	int dotLocation = 0;
+	for (int i = strlen(fileName); i >= 0; i--)
+	{
+		if (fileName[i] == '.')
+		{
+			dotLocation = i;
+			i = -1;
+		}
+	}
+	strncpy(writeName, fileName, dotLocation);
 	strcat(writeName, "_Processed");
-	strcat(writeName, fileName + (strlen(fileName) - 5));
+	strcat(writeName, fileName + dotLocation);
 
 	fileWrite = fopen(writeName, "w");
 	if (fileWrite == NULL)
@@ -185,7 +194,7 @@ int process(char* fileName)
 		}
 	}
 
-
+	printf("Process Finished at %s\n", writeName);
 	fclose(fileRead);
 	fclose(fileWrite);
 
@@ -211,8 +220,7 @@ int main(int argc, char* argv[])
 		strcat(fileName, argv[i]);
 		strcat(fileName, " ");
 	}
-	if(!process(fileName))
-		printf("Process Finished\n");
+	process(fileName);
 
 	return 0;
 }

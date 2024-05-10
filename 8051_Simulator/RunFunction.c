@@ -86,8 +86,7 @@ void printChip(unsigned long long int cycle, int programCounter)
 		if (i == 9) // SBUF 출력을 위함
 		{
 			printf("9(I/O) ");
-		}
-		else {
+		}else{
 			printf(" %X ", i);
 		}
 	}
@@ -106,12 +105,10 @@ void printChip(unsigned long long int cycle, int programCounter)
 				if (i == 9) // SBUF의 경우
 				{
 					printf("%2X, %2X ", chip.internal_RAM[i * 16 + j], chip.SBUF_send);
-				}
-				else {
+				}else{
 					printf("  %2X   ", chip.internal_RAM[i * 16 + j]);
 				}
-			}
-			else {
+			}else{
 				printf("%2X ", chip.internal_RAM[i * 16 + j]);
 			}
 		}

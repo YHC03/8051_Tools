@@ -441,7 +441,7 @@ char getBitAddr(unsigned char location)
 }
 
 
-/* orOperation 함수
+/* orOperation() 함수
 *
 * 기능 : 각종 ORL 함수를 실행한다.
 * 입력 변수 : destination, source, isDat(상수 여부), isBit(bit 주소 여부, -1인 경우 반대 bit값)
@@ -501,7 +501,7 @@ void orOperation(unsigned char dest, unsigned char src, char isData, char isBit)
 }
 
 
-/* andOperation 함수
+/* andOperation() 함수
 *
 * 기능 : 각종 ANL 함수를 실행한다.
 * 입력 변수 : destination, source, isDat(상수 여부), isBit(bit 주소 여부, -1인 경우 반대 bit값)
@@ -561,7 +561,7 @@ void andOperation(unsigned char dest, unsigned char src, char isData, char isBit
 }
 
 
-/* xorOperation 함수
+/* xorOperation() 함수
 *
 * 기능 : 각종 XRL 함수를 실행한다.
 * 입력 변수 : destination, source, isDat(상수 여부)
@@ -611,7 +611,7 @@ void xorOperation(unsigned char dest, unsigned char src, char isData)
 }
 
 
-/* swapOperation 함수
+/* swapOperation() 함수
 *
 * 기능 : 각종 XCH 함수를 실행한다.
 * 입력 변수 : source (destination은 무조건 ACC)
@@ -638,7 +638,7 @@ void swapOperation(unsigned char src)
 }
 
 
-/* halfSwapOperation 함수
+/* halfSwapOperation() 함수
 *
 * 기능 : 각종 XCHD 함수를 실행한다.
 * 입력 변수 : source (destination은 무조건 ACC)
@@ -666,7 +666,7 @@ void halfSwapOperation(unsigned char src)
 }
 
 
-/* DAOperation 함수
+/* DAOperation() 함수
 *
 * 기능 : DA 함수를 실행한다.
 * 입출력 변수 없음
