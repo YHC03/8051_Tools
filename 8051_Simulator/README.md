@@ -13,12 +13,22 @@ math.h : pow() 함수를 사용하기 위함
 windows.h : system("PAUSE"), system("cls") 함수를 사용하기 위함  
 
 ---
+## 세부 파일 소개
+8051_Variables: 8051 Chip 관련 상수와, Chip의 RAM, ROM 전역 변수를 저장함   
+RunFunction: 8051 Chip의 명령어를 읽어들어 실행함  
+RunSpecific: RunFunction에서 요청한 명령들의 함수를 실제로 실행함  
+Timer_and_Interrupt: 8051 Timer와 Interrupt를 실행함  
+FileInput: 실행할 .hex 파일을 읽어들임  
+8051_Simulator: 전체 프로그램을 관리하고 실행함  
+
+---
 ## 작동 방법
-.exe 파일 생성 후, "(파일명).exe" "(HEX 파일 위치).hex" 명령어로 프로그램을 실행한다.  
+모든 Source 및 Header 파일을 Build해 .exe 파일 생성 후, "(파일명).exe" "(HEX 파일 위치).hex" 명령어로 프로그램을 실행한다.  
 실행할 HEX 파일의 주소와 이름을 char* argv[]로 받는다.  
 파일이 정상적으로 Load되지 않는 경우, 오류가 나오며 프로그램이 종료된다.  
 HEX 파일의 Parity에서 오류가 발생하는 경우, Parity Error의 위치를 알려주며 프로그램이 종료한다.  
 
+---
 ## 작동 설명
 
 ### 1. 초기 화면
@@ -56,4 +66,4 @@ inputDat() 함수에서 getPortValue() 함수 호출 시, P0 Port에는 외부�
 
 ---
 작성자 : YHC03  
-최종 작성일 : 2024/05/09  
+최종 작성일 : 2024/05/11  
