@@ -12,7 +12,7 @@
 * UART 기능의 경우, 송수신하는 데이터를 보관하는 변수의 메모리가 Overflow될 우려가 있어 구현하지 않고 있습니다.
 * 
 * 주의사항 : Regiser Indirect 사용 시, 일부 경우에만 Latch 연산을 하는 경우가 있음(다만, 8052가 아닌 8051에서는 존재할 수 없는 구문으로 알고 있음)
-* Carry, AC, OV는 ADD, ADDC, SUBB 함수에서만 작동함(MUL, DIV는 제조사마다 변화하는 형태가 다른 관계로 해당 값이 변화하지 않음)
+* AC, OV는 ADD, ADDC, SUBB 함수에서만 작동함(MUL, DIV는 제조사마다 변화하는 형태가 다른 관계로 해당 값이 변화하지 않음). 또한, DIV 함수에서는 0으로 나누면 아무 일도 일어나지 않음.
 * 
 * 작성자 : YHC03
 */
@@ -74,6 +74,10 @@ const unsigned char PSW1 = 0xD4;
 const unsigned char PSW0 = 0xD3;
 const unsigned char OV = 0xD2;
 const unsigned char P = 0xD0;
+const unsigned char IT0 = 0x88;
+const unsigned char IE0 = 0x89;
+const unsigned char IT1 = 0x8A;
+const unsigned char IE1 = 0x8B;
 const unsigned char TR0 = 0x8C;
 const unsigned char TR1 = 0x8E;
 const unsigned char TF0 = 0x8D;
@@ -197,7 +201,6 @@ void init()
 * 출력 변수 없음
 * 
 * 버그 : C/T 활성화 시, clock 감지 불가 오류 있음
-* Timer 3에서 버그 발생 가능성 있음
 */
 void timerControl(int cycle)
 {
@@ -475,12 +478,14 @@ void clearInterrupt()
 	if ((interruptPrior & 0x01) && intData[0] == 1) // Priority 설정한 Interrupt 0 실행 종료
 	{
 		intData[0] = 0;
+		clearBitAddr(IE0);
 		return;
 	}else if ((interruptPrior & 0x02) && intData[1] == 1){ // Priority 설정한 Interrupt 1 실행 종료
 		intData[1] = 0;
 		return;
 	}else if ((interruptPrior & 0x04) && intData[2] == 1){ // Priority 설정한 Interrupt 2 실행 종료
 		intData[2] = 0;
+		clearBitAddr(IE1);
 		return;
 	}else if ((interruptPrior & 0x08) && intData[3] == 1){ // Priority 설정한 Interrupt 3 실행 종료
 		intData[3] = 0;
@@ -491,12 +496,14 @@ void clearInterrupt()
 	if (intData[0] == 1) // Priority 설정 안 한 Interrupt 0 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 	{
 		intData[0] = 0;
+		clearBitAddr(IE0);
 		return;
 	}else if (intData[1] == 1){ // Priority 설정 안 한 Interrupt 1 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 		intData[1] = 0;
 		return;
 	}else if (intData[2] == 1){ // Priority 설정 안 한 Interrupt 2 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 		intData[2] = 0;
+		clearBitAddr(IE1);
 		return;
 	}else if (intData[3] == 1){ // Priority 설정 안 한 Interrupt 3 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 		intData[3] = 0;
@@ -596,11 +603,27 @@ int interruptControl(int PC)
 		return PC;
 	}
 
+
+	// 외부 인터럽트 관련 설정
+	if ((!getBitAddr(0xB2/*P3.2*/) && INT0) || getBitAddr(IE0)) // P3.2가 Falling Edge거나 IE0 = 1(현상 유지)일 때
+	{
+		setBitAddr(IE0);
+	}else{
+		clearBitAddr(IE0);
+	}
+	if ((!getBitAddr(0xB3/*P3.3*/) && INT1) || getBitAddr(IE1)) // P3.3이 Falling Edge거나 IE1 = 1(현상 유지)일 때
+	{
+		setBitAddr(IE1);
+	}else{
+		clearBitAddr(IE1);
+	}
+
+
 	// 각 인터럽트별로 활성화 확인
 	if (getBitAddr(EX0)) // 외부 인터럽트 0
 	{
-		// Falling Edge
-		if (!getBitAddr(0xB2/*P3.2*/) && INT0)
+		// IE0이 활성화되었으며 IT0 = 1이고 해당 인터럽트가 실행 대기나 실행 중이 아니거나, 혹은 IT0 = 0이며 P3.2가 0일 때
+		if ((getBitAddr(IE0) && getBitAddr(IT0) && !intData[0]) || (!getBitAddr(0xB2/*P3.2*/) && !getBitAddr(IT0)))
 		{
 			intData[0] = 2;
 		}
@@ -618,8 +641,8 @@ int interruptControl(int PC)
 
 	if (getBitAddr(EX1)) // 외부 인터럽트 1
 	{
-		// Falling Edge
-		if (getBitAddr(0xB3/*P3.3*/) && INT1)
+		// IE1이 활성화되었으며 IT1 = 1이고 해당 인터럽트가 실행 대기나 실행 중이 아니거나, 혹은 IT1 = 0이며 P3.3이 0일 때
+		if ((getBitAddr(IE1) && getBitAddr(IT1) && !intData[2]) || (!getBitAddr(0xB3/*P3.3*/) && !getBitAddr(IT1)))
 		{
 			intData[2] = 2;
 		}
@@ -1553,7 +1576,6 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		return PC;
 
 		// 0x10-Ox1F
-
 	case 0x10: // JBC
 		printf("JBC %03XH, %03XH\n", data1, data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
@@ -2314,7 +2336,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		return chip.internal_RAM[DPH] * 0x100 + chip.internal_RAM[DPL] + chip.internal_RAM[ACC] - 1;
+		return chip.internal_RAM[DPH] * 0x100 + chip.internal_RAM[DPL] + chip.internal_RAM[ACC];
 	case 0x74: // MOV A, data
 		printf("MOV A, #%03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
@@ -2538,8 +2560,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (getBitAddr(C))
 		{
 			setBitAddr(data1);
-		}
-		else {
+		}else{
 			clearBitAddr(data1);
 		}
 		return PC;
@@ -2658,8 +2679,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (getBitAddr(data1))
 		{
 			setBitAddr(C);
-		}
-		else {
+		}else{
 			clearBitAddr(C);
 		}
 		return PC;
