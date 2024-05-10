@@ -9,7 +9,7 @@
 * 8051 Simulator
 * 
 * 제한사항 : 외장 메모리 미지원, UART 기능 미지원
-* UART 기능의 경우, 송수신하는 데이터를 보관하는 변수의 메모리가 Overflow될 우려가 있어 구현하지 않고 있습니다.
+* UART 기능의 경우, 송신하는 데이터를 보관하는 변수의 메모리가 Overflow될 우려가 있고, 다양한 종류의 UART 통신을 CLI 환경에서 구현하기에는 한계가 있어 구현하지 않고 있습니다.
 * 
 * 주의사항 : Regiser Indirect 사용 시, 일부 경우에만 Latch 연산을 하는 경우가 있음(다만, 8052가 아닌 8051에서는 존재할 수 없는 구문으로 알고 있음)
 * AC, OV는 ADD, ADDC, SUBB 함수에서만 작동함(MUL, DIV는 제조사마다 변화하는 형태가 다른 관계로 해당 값이 변화하지 않음). 또한, DIV 함수에서는 0으로 나누면 아무 일도 일어나지 않음.
@@ -20,8 +20,9 @@
 
 typedef struct
 {
-	unsigned char internal_RAM[256]; // Special Function Register 포함
+	unsigned char internal_RAM[256]; // Special Function Register, SBUF의 수신(8051 기준 Read) Register 포함
 	unsigned char latch[4];
+	unsigned char SBUF_send; // SBUF의 송신(8051 기준 Write) Register
 }Chip;
 
 // RAM, ROM 선언
@@ -64,6 +65,7 @@ const unsigned char TL0 = 0x8A;
 const unsigned char TL1 = 0x8B;
 const unsigned char TH0 = 0x8C;
 const unsigned char TH1 = 0x8D;
+const unsigned char SBUF = 0x99;
 const unsigned char IE = 0xA8;
 const unsigned char IP = 0xB8;
 
@@ -121,6 +123,8 @@ void putParity(); // ACC의 Parity
 void syncLatch(char port); // Latch 연동
 
 // 가.감 연산
+void incFunc(short dest); // INC (DPTR 제외)
+void decFunc(short dest); // DEC
 void addFunc(short src, char isDat, char isCarry); // ADD, ADDC
 void subbFunc(short src, char isDat); // SUBB
 
@@ -137,7 +141,8 @@ void andOperation(unsigned char dest, unsigned char src, char isData, char isBit
 void xorOperation(unsigned char dest, unsigned char src, char isData); // XRL
 
 // Swap
-void swapOperation(unsigned char dest, unsigned char src); // XCH
+void swapOperation(unsigned char src); // XCH
+void halfSwapOperation(unsigned char src); // XCHD
 
 // DA 함수
 void DAOperation();
@@ -168,6 +173,9 @@ void init()
 	{
 		chip.internal_RAM[i] = 0;
 	}
+
+	// SBUF_send 초기화
+	chip.SBUF_send = 0;
 
 	// Stack Pointer의 값은 0x07로 초기화
 	chip.internal_RAM[SP] = 0x07;
@@ -715,6 +723,44 @@ void putParity()
 }
 
 
+/* incFunc() 함수
+*
+* 기능 : INC DPTR를 제외한 각종 INC 함수를 실행한다.
+* 입력 변수 : destination
+* 출력 변수 없음
+*/
+void incFunc(short dest)
+{
+	// 목적지가 SBUF인 경우, SBUF의 8051기준 수신용 RAM에서 1을 더한 값을 8051의 송신용 RAM에 저장한다
+	if (dest == SBUF)
+	{
+		chip.SBUF_send = chip.internal_RAM[dest] + 1;
+	}else{
+		chip.internal_RAM[dest]++;
+	}
+	return;
+}
+
+
+/* decFunc() 함수
+*
+* 기능 : 각종 DEC 함수를 실행한다.
+* 입력 변수 : destination
+* 출력 변수 없음
+*/
+void decFunc(short dest)
+{
+	// 목적지가 SBUF인 경우, SBUF의 8051기준 수신용 RAM에서 1을 뺀 값을 8051의 송신용 RAM에 저장한다
+	if (dest == SBUF)
+	{
+		chip.SBUF_send = chip.internal_RAM[dest] - 1;
+	}else{
+		chip.internal_RAM[dest]--;
+	}
+	return;
+}
+
+
 /* movFunc() 함수
 * 
 * 기능 : 각종 MOV 함수를 실행한다.
@@ -728,10 +774,20 @@ void movFunc(short dest, short src, char isDat)
 	// 상수 입력인지 확인
 	if (isDat == 0)
 	{
-		chip.internal_RAM[dest] = chip.internal_RAM[src];
+		if (dest == SBUF) // Destination이 SBUF인 경우, 해당 값을 SBUF(송신)에 저장
+		{
+			chip.SBUF_send = chip.internal_RAM[src];
+		}else{
+			chip.internal_RAM[dest] = chip.internal_RAM[src];
+		}
 
 	}else if (isDat == 1){
-		chip.internal_RAM[dest] = src;
+		if (dest == SBUF) // Destination이 SBUF인 경우, 해당 값을 SBUF(송신)에 저장
+		{
+			chip.SBUF_send = src;
+		}else{
+			chip.internal_RAM[dest] = src;
+		}
 	}
 
 	// Port에 출력한 경우, 해당 Port과 Latch를 연동한다.
@@ -921,7 +977,14 @@ void stackOperation(unsigned char src, int isPop)
 	}else{ // PUSH면
 		// SP 증가 후, 주어진 주소의 값을 Stack에 저장
 		chip.internal_RAM[SP]++;
-		chip.internal_RAM[chip.internal_RAM[SP]] = chip.internal_RAM[src];
+
+		// SP 위치가 SBUF인 경우, 해당 값을 SBUF(송신)에 저장(P0P는 SBUF(수신)에서 읽어옴)
+		if (chip.internal_RAM[SP] == SBUF)
+		{
+			chip.SBUF_send = chip.internal_RAM[src];
+		}else{
+			chip.internal_RAM[chip.internal_RAM[SP]] = chip.internal_RAM[src];
+		}
 	}
 
 	return;
@@ -944,7 +1007,14 @@ unsigned char stackOperationPC(unsigned char src, int isPop)
 	}else{
 		// SP 증가 후, 주어진 주소의 값을 Stack에 저장
 		chip.internal_RAM[SP]++;
-		chip.internal_RAM[chip.internal_RAM[SP]] = src;
+
+		// SP 위치가 SBUF인 경우, 해당 값을 SBUF(송신)에 저장(P0P는 SBUF(수신)에서 읽어옴)
+		if (chip.internal_RAM[SP] == SBUF)
+		{
+			chip.SBUF_send = src;
+		}else{
+			chip.internal_RAM[chip.internal_RAM[SP]] = src;
+		}
 	}
 
 	return 0;
@@ -1063,16 +1133,32 @@ void orOperation(unsigned char dest, unsigned char src, char isData, char isBit)
 	}else{ // Byte 주소의 경우
 		if (isData == 1) // 데이터 입력인 경우
 		{
-			chip.internal_RAM[dest] |= src;
+			if (dest == SBUF) // SBUF 출력의 경우, 출력을 SBUF(송신)에 한다.
+			{
+				chip.SBUF_send = chip.internal_RAM[dest] | src;
+			}else{
+				chip.internal_RAM[dest] |= src;
+			}
 
 		}else{ // 주소 입력인 경우
 			if (src == 0x80 || src == 0x90 || src == 0xA0 || src == 0xB0) // Port 주소인 경우
 			{
 				// 이 경우, Read-Modify-Write이므로, Latch의 값을 반전한다.
-				chip.internal_RAM[dest] |= chip.latch[(src - 0x80) / 16];
+
+				if (dest == SBUF) // SBUF 출력의 경우, 출력을 SBUF(송신)에 한다.
+				{
+					chip.SBUF_send = chip.internal_RAM[dest] | chip.latch[(src - 0x80) / 16];
+				}else{
+					chip.internal_RAM[dest] |= chip.latch[(src - 0x80) / 16];
+				}
 
 			}else{ // Port 주소가 아닌 경우
-				chip.internal_RAM[dest] |= chip.internal_RAM[src];
+				if (dest == SBUF) // SBUF 출력의 경우, 출력을 SBUF(송신)에 한다.
+				{
+					chip.SBUF_send = chip.internal_RAM[dest] | chip.internal_RAM[src];
+				}else{
+					chip.internal_RAM[dest] |= chip.internal_RAM[src];
+				}
 			}
 		}
 
@@ -1107,16 +1193,32 @@ void andOperation(unsigned char dest, unsigned char src, char isData, char isBit
 	}else{ // Byte 주소의 경우
 		if (isData == 1) // 데이터 입력인 경우
 		{
-			chip.internal_RAM[dest] &= src;
+			if (dest == SBUF) // SBUF 출력의 경우, 출력을 SBUF(송신)에 한다.
+			{
+				chip.SBUF_send = chip.internal_RAM[dest] & src;
+			}else{
+				chip.internal_RAM[dest] &= src;
+			}
 
 		}else{ // 주소 입력인 경우
 			if (src == 0x80 || src == 0x90 || src == 0xA0 || src == 0xB0) // Port 주소인 경우
 			{
 				// 이 경우, Read-Modify-Write이므로, Latch의 값을 반전한다.
-				chip.internal_RAM[dest] &= chip.latch[(src - 0x80) / 16];
+
+				if (dest == SBUF) // SBUF 출력의 경우, 출력을 SBUF(송신)에 한다.
+				{
+					chip.SBUF_send = chip.internal_RAM[dest] & chip.latch[(src - 0x80) / 16];
+				}else{
+					chip.internal_RAM[dest] &= chip.latch[(src - 0x80) / 16];
+				}
 
 			}else{ // Port 주소가 아닌 경우
-				chip.internal_RAM[dest] &= chip.internal_RAM[src];
+				if (dest == SBUF) // SBUF 출력의 경우, 출력을 SBUF(송신)에 한다.
+				{
+					chip.SBUF_send = chip.internal_RAM[dest] & chip.internal_RAM[src];
+				}else{
+					chip.internal_RAM[dest] &= chip.internal_RAM[src];
+				}
 			}
 		}
 
@@ -1141,16 +1243,33 @@ void xorOperation(unsigned char dest, unsigned char src, char isData)
 {
 	if (isData == 1) // 데이터 입력인 경우
 	{
-		chip.internal_RAM[dest] ^= src;
+		if (dest == SBUF) // SBUF 출력의 경우, 출력을 SBUF(송신)에 한다.
+		{
+			chip.SBUF_send = chip.internal_RAM[dest] ^ src;
+		}else{
+			chip.internal_RAM[dest] ^= src;
+		}
 
 	}else{ // 주소 입력인 경우
 		if (src == 0x80 || src == 0x90 || src == 0xA0 || src == 0xB0) // Port 주소인 경우
 		{
 			// 이 경우, Read-Modify-Write이므로, Latch의 값을 반전한다.
-			chip.internal_RAM[dest] ^= chip.latch[(src - 0x80) / 16];
+
+			if (dest == SBUF) // SBUF 출력의 경우, 출력을 SBUF(송신)에 한다.
+			{
+				chip.SBUF_send = chip.internal_RAM[dest] ^ chip.latch[(src - 0x80) / 16];
+			}else{
+				chip.internal_RAM[dest] ^= chip.latch[(src - 0x80) / 16];
+			}
 
 		}else{ // Port 주소가 아닌 경우
-			chip.internal_RAM[dest] ^= chip.internal_RAM[src];
+
+			if (dest == SBUF) // SBUF 출력의 경우, 출력을 SBUF(송신)에 한다.
+			{
+				chip.SBUF_send = chip.internal_RAM[dest] ^ chip.internal_RAM[src];
+			}else{
+				chip.internal_RAM[dest] ^= chip.internal_RAM[src];
+			}
 		}
 	}
 
@@ -1167,19 +1286,52 @@ void xorOperation(unsigned char dest, unsigned char src, char isData)
 /* swapOperation 함수
 *
 * 기능 : 각종 XCH 함수를 실행한다.
-* 입력 변수 : destination, source
+* 입력 변수 : source (destination은 무조건 ACC)
 * 출력 변수 없음
 */
-void swapOperation(unsigned char dest, unsigned char src)
+void swapOperation(unsigned char src)
 {
-	unsigned char tmp = chip.internal_RAM[dest];
-	chip.internal_RAM[dest] = chip.internal_RAM[src];
-	chip.internal_RAM[src] = tmp;
+	unsigned char tmp = chip.internal_RAM[ACC];
+	chip.internal_RAM[ACC] = chip.internal_RAM[src];
+	if (src == SBUF) // SBUF 출력의 경우, 출력을 SBUF(송신)에 한다.
+	{
+		chip.SBUF_send = tmp;
+	}else{
+		chip.internal_RAM[src] = tmp;
+	}
 
 	// P0-3 Port가 Source인 경우, WriteLatch를 진행한다.
 	if (src == 0x80 || src == 0x90 || src == 0xA0 || src == 0xB0)
 	{
 		syncLatch((src - 0x80) / 0x10);
+	}
+
+	return;
+}
+
+
+/*  halfSwapOperation 함수
+*
+* 기능 : 각종 XCHD 함수를 실행한다.
+* 입력 변수 : source (destination은 무조건 ACC)
+* 출력 변수 없음
+*/
+void halfSwapOperation(unsigned char src)
+{
+	unsigned char tmpValue = chip.internal_RAM[src] & 0x0F;
+	if (src == SBUF) // SBUF 출력의 경우, 출력을 SBUF(송신)에 한다.
+	{
+		chip.SBUF_send = (chip.internal_RAM[src] & 0xF0) + (chip.internal_RAM[ACC] & 0x0F);
+	}else{
+		chip.internal_RAM[src] = (chip.internal_RAM[src] & 0xF0) + (chip.internal_RAM[ACC] & 0x0F);
+	}
+	chip.internal_RAM[ACC] = (chip.internal_RAM[ACC] & 0xF0) + tmpValue;
+
+	// P0-3 Port가 Source인 경우, 아래 4bit에 대해서만 WriteLatch를 진행한다.
+	if (chip.internal_RAM[src] == 0x80 || chip.internal_RAM[src] == 0x90 || chip.internal_RAM[src] == 0xA0 || chip.internal_RAM[src] == 0xB0)
+	{
+		// 위 4bit는 기존값, 아래 4bit는 새로운 값.
+		chip.latch[(src - 0x80) / 0x10] = (chip.latch[(src - 0x80) / 0x10] & 0xF0) + (chip.internal_RAM[src] & 0x0F);
 	}
 
 	return;
@@ -1239,7 +1391,12 @@ void printChip(unsigned long long int cycle, int programCounter)
 	// Index 출력
 	for (int i = 0; i < 16; i++)
 	{
-		printf(" %X ", i);
+		if (i == 9) // SBUF 출력을 위함
+		{
+			printf("9(I/O) ");
+		}else{
+			printf(" %X ", i);
+		}
 	}
 	printf("\n");
 
@@ -1247,21 +1404,20 @@ void printChip(unsigned long long int cycle, int programCounter)
 	for (int i = 0; i < 16; i++)
 	{
 		// Index 출력
-		if (i * 16 == 0)
-		{
-			printf(" 0 ");
-		}else{
-			printf("%2.X ", i * 16);
-		}
+		printf("%2X ", i * 16);
 
 		// RAM의 값 출력
 		for (int j = 0; j < 16; j++)
 		{
-			if (chip.internal_RAM[i * 16 + j] == 0)
-			{
-				printf(" 0 ");
+			if (j == 9){
+				if (i == 9) // SBUF의 경우
+				{
+					printf("%2X, %2X ", chip.internal_RAM[i * 16 + j], chip.SBUF_send);
+				}else{
+					printf("  %2X   ", chip.internal_RAM[i * 16 + j]);
+				}
 			}else{
-				printf("%2.X ", chip.internal_RAM[i * 16 + j]);
+				printf("%2X ", chip.internal_RAM[i * 16 + j]);
 			}
 		}
 
@@ -1495,84 +1651,84 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[ACC]++;
+		incFunc(ACC);
 		return PC;
 	case 0x05: // INC DIR
-		printf("INC 0x%X\n", data1);
+		printf("INC %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[data1]++;
+		incFunc(data1);
 		return PC;
 	case 0x06: // INC @R0
 		printf("INC @R0\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[chip.internal_RAM[8 * PSWROM]]++;
+		incFunc(chip.internal_RAM[8 * PSWROM]);
 		return PC;
 	case 0x07: // INC @R1
 		printf("INC @R1\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[chip.internal_RAM[8 * PSWROM + 1]]++;
+		incFunc(chip.internal_RAM[8 * PSWROM + 1]);
 		return PC;
 	case 0x08: // INC R0
 		printf("INC R0\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM]++;
+		incFunc(8 * PSWROM);
 		return PC;
 	case 0x09: // INC R1
 		printf("INC R1\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 1]++;
+		incFunc(8 * PSWROM + 1);
 		return PC;
 	case 0x0A: // INC R2
 		printf("INC R2\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 2]++;
+		incFunc(8 * PSWROM + 2);
 		return PC;
 	case 0x0B: // INC R3
 		printf("INC R3\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 3]++;
+		incFunc(8 * PSWROM + 3);
 		return PC;
 	case 0x0C: // INC R4
 		printf("INC R4\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 4]++;
+		incFunc(8 * PSWROM + 4);
 		return PC;
 	case 0x0D: // INC R5
 		printf("INC R5\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 5]++;
+		incFunc(8 * PSWROM + 5);
 		return PC;
 	case 0x0E: // INC R6
 		printf("INC R6\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 6]++;
+		incFunc(8 * PSWROM + 6);
 		return PC;
 	case 0x0F: // INC R7
 		printf("INC R7\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 7]++;
+		incFunc(8 * PSWROM + 7);
 		return PC;
 
 		// 0x10-Ox1F
@@ -1627,85 +1783,84 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[ACC]--;
-		putParity(); // NO C, AC operation
+		decFunc(ACC);
 		return PC;
 	case 0x15: // DEC DIR
 		printf("DEC %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[data1]--;
+		decFunc(data1);
 		return PC;
 	case 0x16: // DEC @R0
 		printf("DEC @R0\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[chip.internal_RAM[8 * PSWROM]]--;
+		decFunc(chip.internal_RAM[8 * PSWROM]);
 		return PC;
 	case 0x17: // DEC @R1
 		printf("DEC @R1\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[chip.internal_RAM[8 * PSWROM + 1]]--;
+		decFunc(chip.internal_RAM[8 * PSWROM + 1]);
 		return PC;
 	case 0x18: // DEC R0
 		printf("DEC R0\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM]--;
+		decFunc(8 * PSWROM);
 		return PC;
 	case 0x19: // DEC R1
 		printf("DEC R1\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 1]--;
+		decFunc(8 * PSWROM + 1);
 		return PC;
 	case 0x1A: // DEC R2
 		printf("DEC R2\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 2]--;
+		decFunc(8 * PSWROM + 2);
 		return PC;
 	case 0x1B: // DEC R3
 		printf("DEC R3\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 3]--;
+		decFunc(8 * PSWROM + 3);
 		return PC;
 	case 0x1C: // DEC R4
 		printf("DEC R4\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 4]--;
+		decFunc(8 * PSWROM + 4);
 		return PC;
 	case 0x1D: // DEC R5
 		printf("DEC R5\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 5]--;
+		decFunc(8 * PSWROM + 5);
 		return PC;
 	case 0x1E: // DEC R6
 		printf("DEC R6\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 6]--;
+		decFunc(8 * PSWROM + 6);
 		return PC;
 	case 0x1F: // DEC R7
 		printf("DEC R7\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 7]--;
+		decFunc(8 * PSWROM + 7);
 		return PC;
 
 		// 0x20-0x2F
@@ -2981,77 +3136,77 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		swapOperation(ACC, data1);
+		swapOperation(data1);
 		return PC;
 	case 0xC6: // XCH @R0
 		printf("XCH A, @R0\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		swapOperation(ACC, chip.internal_RAM[8 * PSWROM]);
+		swapOperation(chip.internal_RAM[8 * PSWROM]);
 		return PC;
 	case 0xC7: // XCH @R1
 		printf("XCH A, @R1\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		swapOperation(ACC, chip.internal_RAM[8 * PSWROM + 1]);
+		swapOperation(chip.internal_RAM[8 * PSWROM + 1]);
 		return PC;
 	case 0xC8: // XCH R0
 		printf("XCH A, R0\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		swapOperation(ACC, 8 * PSWROM);
+		swapOperation(8 * PSWROM);
 		return PC;
 	case 0xC9: // XCH R1
 		printf("XCH A, R1\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		swapOperation(ACC, 8 * PSWROM + 1);
+		swapOperation(8 * PSWROM + 1);
 		return PC;
 	case 0xCA: // XCH R2
 		printf("XCH A, R2\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		swapOperation(ACC, 8 * PSWROM + 2);
+		swapOperation(8 * PSWROM + 2);
 		return PC;
 	case 0xCB: // XCH R3
 		printf("XCH A, R3\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		swapOperation(ACC, 8 * PSWROM + 3);
+		swapOperation(8 * PSWROM + 3);
 		return PC;
 	case 0xCC: // XCH R4
 		printf("XCH A, R4\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		swapOperation(ACC, 8 * PSWROM + 4);
+		swapOperation(8 * PSWROM + 4);
 		return PC;
 	case 0xCD: // XCH R5
 		printf("XCH A, R5\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		swapOperation(ACC, 8 * PSWROM + 5);
+		swapOperation(8 * PSWROM + 5);
 		return PC;
 	case 0xCE: // XCH R6
 		printf("XCH A, R6\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		swapOperation(ACC, 8 * PSWROM + 6);
+		swapOperation(8 * PSWROM + 6);
 		return PC;
 	case 0xCF: // XCH R7
 		printf("XCH A, R7\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		swapOperation(ACC, 8 * PSWROM + 7);
+		swapOperation(8 * PSWROM + 7);
 		return PC;
 
 		//0xD0-0xDF
@@ -3096,7 +3251,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[data1]--;
+		decFunc(data1);
 		if (chip.internal_RAM[data1] != 0)
 		{
 			return PC + (char)data2;
@@ -3108,38 +3263,21 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		tmpValue = chip.internal_RAM[chip.internal_RAM[8 * PSWROM]] & 0x0F;
-		chip.internal_RAM[chip.internal_RAM[8 * PSWROM]] = (chip.internal_RAM[chip.internal_RAM[8 * PSWROM]] & 0xF0) + (chip.internal_RAM[ACC] & 0x0F);
-		chip.internal_RAM[ACC] = (chip.internal_RAM[ACC] & 0xF0) + tmpValue;
-
-		// P0-3 Port가 Source인 경우, WriteLatch를 진행한다.
-		if (chip.internal_RAM[8 * PSWROM] == 0x80 || chip.internal_RAM[8 * PSWROM] == 0x90 || chip.internal_RAM[8 * PSWROM] == 0xA0 || chip.internal_RAM[8 * PSWROM] == 0xB0)
-		{
-			syncLatch((chip.internal_RAM[8 * PSWROM] - 0x80) / 0x10);
-		}
+		halfSwapOperation(chip.internal_RAM[8 * PSWROM]);
 		return PC;
 	case 0xD7: // XCHD A, @R1
 		printf("XCHD A, @R1\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		tmpValue = chip.internal_RAM[chip.internal_RAM[8 * PSWROM + 1]] & 0x0F;
-		chip.internal_RAM[chip.internal_RAM[8 * PSWROM + 1]] = (chip.internal_RAM[chip.internal_RAM[8 * PSWROM + 1]] & 0xF0) + (chip.internal_RAM[ACC] & 0x0F);
-		chip.internal_RAM[ACC] = (chip.internal_RAM[ACC] & 0xF0) + tmpValue;
-		
-		// P0-3 Port가 Source인 경우, WriteLatch를 진행한다.
-		if (chip.internal_RAM[8 * PSWROM + 1] == 0x80 || chip.internal_RAM[8 * PSWROM + 1] == 0x90 || chip.internal_RAM[8 * PSWROM + 1] == 0xA0 || chip.internal_RAM[8 * PSWROM + 1] == 0xB0)
-		{
-			syncLatch((chip.internal_RAM[8 * PSWROM + 1] - 0x80) / 0x10);
-		}
-
+		halfSwapOperation(chip.internal_RAM[8 * PSWROM + 1]);
 		return PC;
 	case 0xD8: // DJNZ R0, label
 		printf("DJNZ R0, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM]--;
+		decFunc(8 * PSWROM);
 		if (chip.internal_RAM[8 * PSWROM] != 0)
 		{
 			return PC + (char)data1;
@@ -3151,7 +3289,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 1]--;
+		decFunc(8 * PSWROM + 1);
 		if (chip.internal_RAM[8 * PSWROM + 1] != 0)
 		{
 			return PC + (char)data1;
@@ -3163,7 +3301,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 2]--;
+		decFunc(8 * PSWROM + 2);
 		if (chip.internal_RAM[8 * PSWROM + 2] != 0)
 		{
 			return PC + (char)data1;
@@ -3175,7 +3313,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 3]--;
+		decFunc(8 * PSWROM + 3);
 		if (chip.internal_RAM[8 * PSWROM + 3] != 0)
 		{
 			return PC + (char)data1;
@@ -3187,7 +3325,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 4]--;
+		decFunc(8 * PSWROM + 4);
 		if (chip.internal_RAM[8 * PSWROM + 4] != 0)
 		{
 			return PC + (char)data1;
@@ -3199,7 +3337,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 5]--;
+		decFunc(8 * PSWROM + 5);
 		if (chip.internal_RAM[8 * PSWROM + 5] != 0)
 		{
 			return PC + (char)data1;
@@ -3211,7 +3349,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 6]--;
+		decFunc(8 * PSWROM + 6);
 		if (chip.internal_RAM[8 * PSWROM + 6] != 0)
 		{
 			return PC + (char)data1;
@@ -3223,7 +3361,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		chip.internal_RAM[8 * PSWROM + 7]--;
+		decFunc(8 * PSWROM + 7);
 		if (chip.internal_RAM[8 * PSWROM + 7] != 0)
 		{
 			return PC + (char)data1;

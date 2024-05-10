@@ -195,7 +195,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0x05: // INC DIR
-		fprintf(targetFile, "INC 0x%X\n", data1);
+		fprintf(targetFile, "INC %03XH\n", data1);
 
 		break;
 	case 0x06: // INC @R0
