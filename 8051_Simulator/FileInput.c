@@ -83,7 +83,7 @@ int fileReader(char* fileName)
 		parity += tmp_REM;
 
 		// 해당 줄의 Program Counter 위치를 읽고
-		tmp_PC = asciiToHEX(tmp_Data[3]) * pow(16, 3) + asciiToHEX(tmp_Data[4]) * pow(16, 2) + asciiToHEX(tmp_Data[5]) * pow(16, 1) + asciiToHEX(tmp_Data[6]); //AAAA
+		tmp_PC = asciiToHEX(tmp_Data[3]) * 0x1000 + asciiToHEX(tmp_Data[4]) * 0x100 + asciiToHEX(tmp_Data[5]) * 0x10 + asciiToHEX(tmp_Data[6]); //AAAA
 		parity += tmp_PC / 0x100 + tmp_PC % 0x100;
 
 		// 해당 줄의 종료 여부를 읽고

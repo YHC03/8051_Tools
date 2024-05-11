@@ -2271,10 +2271,10 @@ void RunProgram(unsigned char mode, int end_PC)
 
 
 		// 자동 실행 모드에서, Program Counter가 파일 끝을 넘어간 경우, 실행 종료
-		if (PC > end_PC && mode) { isEnd = 1; }
+		if ((PC > end_PC) && mode) { isEnd = 1; }
 
-		// 자동 실행 모드에서, Program Counter가 Overflow시, 실행 종료 (다만, 실행 시간이 매우 오래 걸림)
-		if (mode && (prev_PC > PC)) { break; }
+		// 자동 실행 모드에서, 현재 Program Counter의 값이 직전값과 동일한 경우, 아무것도 하지 않는 무한 루프로 판단해 실행 종료
+		if (mode && (prev_PC == PC)) { break; }
 	}
 
 	if (mode) // 자동 실행 모드에서, 결괏값 출력
