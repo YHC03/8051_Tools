@@ -71,9 +71,12 @@ int fileReader(char* fileName)
 			exit(1);
 		}
 
-		// 이전값 저장 후
-		prev_PC = tmp_PC;
-		prev_REM = tmp_REM;
+		// 이전값이 최댓값을 넘어간 경우, 그 값을 저장 후
+		if (prev_PC < tmp_PC)
+		{
+			prev_PC = tmp_PC;
+			prev_REM = tmp_REM;
+		}
 
 		// 해당 줄의 명령어 개수를 읽고
 		tmp_REM = asciiToHEX(tmp_Data[1]) * 16 + asciiToHEX(tmp_Data[2]); //CC
