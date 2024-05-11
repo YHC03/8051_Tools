@@ -246,7 +246,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		{
 			fprintf(targetFile, "JBC %03XH, -%d\n", data1, 0x100 - data2);
 		}else{
-			fprintf(targetFile, "JBC %03XH, %XH\n", data1, data2);
+			fprintf(targetFile, "JBC %03XH, %02XH\n", data1, data2);
 		}
 
 		break;
@@ -317,7 +317,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		{
 			fprintf(targetFile, "JB %03XH, -%d\n", data1, 0x100 - data2);
 		}else{
-			fprintf(targetFile, "JB %03XH, %XH\n", data1, data2);
+			fprintf(targetFile, "JB %03XH, %02XH\n", data1, data2);
 		}
 
 		break;
@@ -388,7 +388,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		{
 			fprintf(targetFile, "JNB %03XH, -%d\n", data1, 0x100 - data2);
 		}else{
-			fprintf(targetFile, "JNB %03XH, %XH\n", data1, data2);
+			fprintf(targetFile, "JNB %03XH, %02XH\n", data1, data2);
 		}
 
 		break;
@@ -459,7 +459,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		{
 			fprintf(targetFile, "JC -%d\n", 0x100 - data1);
 		}else{
-			fprintf(targetFile, "JC %XH\n", data1);
+			fprintf(targetFile, "JC %02XH\n", data1);
 		}
 
 		break;
@@ -530,7 +530,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		{
 			fprintf(targetFile, "JNC -%d\n", 0x100 - data1);
 		}else{
-			fprintf(targetFile, "JNC %XH\n", data1);
+			fprintf(targetFile, "JNC %02XH\n", data1);
 		}
 
 		break;
@@ -601,7 +601,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		{
 			fprintf(targetFile, "JZ -%d\n", 0x100 - data1);
 		}else{
-			fprintf(targetFile, "JZ %XH\n", data1);
+			fprintf(targetFile, "JZ %02XH\n", data1);
 		}
 
 		break;
@@ -672,7 +672,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		{
 			fprintf(targetFile, "JNZ -%d\n", 0x100 - data1);
 		}else{
-			fprintf(targetFile, "JNZ %XH\n", data1);
+			fprintf(targetFile, "JNZ %02XH\n", data1);
 		}
 
 		break;
@@ -681,7 +681,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0x72: // ORL C, bit
-		fprintf(targetFile, "ORL C, #%03XH\n", data1);
+		fprintf(targetFile, "ORL C, %03XH\n", data1);
 
 		break;
 	case 0x73: // JMP @A+DPTR
@@ -742,7 +742,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		{
 			fprintf(targetFile, "SJMP -%d\n", 0x100 - data1);
 		}else{
-			fprintf(targetFile, "SJMP %XH\n", data1); 
+			fprintf(targetFile, "SJMP %02XH\n", data1); 
 		}
 
 		break;
@@ -1139,8 +1139,8 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		break;
 
 		// 0xE0-0xEF
-	case 0xE0: // MOVX A, @A+DPTR
-		fprintf(targetFile, "MOVX A, @A+DPTR\n");
+	case 0xE0: // MOVX A, @DPTR
+		fprintf(targetFile, "MOVX A, @DPTR\n");
 
 		break;
 	case 0xE1: // AJMP
@@ -1205,8 +1205,8 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		break;
 
 		// 0xF0-OxFF
-	case 0xF0: // MOVX A, @A+PC
-		fprintf(targetFile, "MOVX A, @A+PC\n");
+	case 0xF0: // MOVX @DPTR, A
+		fprintf(targetFile, "MOVX @DPTR, A\n");
 
 		break;
 	case 0xF1: // ACALL

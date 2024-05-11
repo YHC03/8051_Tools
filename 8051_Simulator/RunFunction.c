@@ -1026,7 +1026,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		stackOperation(PC / 0x100, 0);
 		return (PC / 0x800) * 0x800 + 0x000 + data1;
 	case 0x72: // ORL C, bit
-		printf("ORL C, #%03XH\n", data1);
+		printf("ORL C, %03XH\n", data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1916,8 +1916,8 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		return PC;
 
 		// 0xE0-0xEF
-	case 0xE0: // MOVX A, @A+DPTR
-		printf("MOVX A, @A+DPTR\n");
+	case 0xE0: // MOVX A, @DPTR
+		printf("MOVX A, @DPTR\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -2030,8 +2030,8 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		return PC;
 
 		// 0xF0-OxFF
-	case 0xF0: // MOVX A, @A+PC
-		printf("MOVX A, @A+PC\n");
+	case 0xF0: // MOVX @DPTR, A
+		printf("MOVX @DPTR, A\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
