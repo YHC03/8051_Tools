@@ -35,7 +35,7 @@ unsigned char asciiToHEX(unsigned char orig); // HEX 변환
 
 // 프로그램 구동
 void RunProgram(char* fileName, int end_PC);
-void programRunner(char* fileName, unsigned char code, unsigned char data1, unsigned char data2);
+void programRunner(char* fileName, unsigned char code, unsigned char data1, unsigned char data2, unsigned short PC);
 
 
 // 함수 끝
@@ -158,10 +158,10 @@ int fileReader(char* fileName)
 /* programRunner() 함수
 * 
 * 기능 : 주어진 code의 명령을 실행한다.
-* 입력 변수 : fileName(출력 파일의 위치와 이름), code(명령 코드), data1(추가데이터1), data2(추가데이터2)
+* 입력 변수 : fileName(출력 파일의 위치와 이름), code(명령 코드), data1(추가데이터1), data2(추가데이터2), PC(다음에 읽어들일 Program Counter의 값)
 * 출력 변수 없음
 */
-void programRunner(char* fileName, unsigned char code, unsigned char data1, unsigned char data2)
+void programRunner(char* fileName, unsigned char code, unsigned char data1, unsigned char data2, unsigned short PC)
 {
 	FILE* targetFile = fopen(fileName, "a");
 
@@ -179,7 +179,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0x01: // AJMP
-		fprintf(targetFile, "AJMP %03XH\n", data1);
+		fprintf(targetFile, "AJMP %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0x02: // LJMP
@@ -242,16 +242,11 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		// 0x10-Ox1F
 
 	case 0x10: // JBC
-		if (data2 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
-		{
-			fprintf(targetFile, "JBC %03XH, -%d\n", data1, 0x100 - data2);
-		}else{
-			fprintf(targetFile, "JBC %03XH, %02XH\n", data1, data2);
-		}
+		fprintf(targetFile, "JBC %03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0x11: // ACALL
-		fprintf(targetFile, "ACALL %03XH\n", data1);
+		fprintf(targetFile, "ACALL %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0x12: // LCALL
@@ -313,16 +308,11 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		// 0x20-0x2F
 	case 0x20: // JB
-		if (data2 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
-		{
-			fprintf(targetFile, "JB %03XH, -%d\n", data1, 0x100 - data2);
-		}else{
-			fprintf(targetFile, "JB %03XH, %02XH\n", data1, data2);
-		}
+		fprintf(targetFile, "JB %03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0x21: // AJMP
-		fprintf(targetFile, "AJMP %03XH\n", data1);
+		fprintf(targetFile, "AJMP %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0x22: // RET
@@ -384,16 +374,11 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		// 0x30-Ox3F
 	case 0x30: // JNB
-		if (data2 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
-		{
-			fprintf(targetFile, "JNB %03XH, -%d\n", data1, 0x100 - data2);
-		}else{
-			fprintf(targetFile, "JNB %03XH, %02XH\n", data1, data2);
-		}
+		fprintf(targetFile, "JNB %03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0x31: // ACALL
-		fprintf(targetFile, "ACALL %03XH\n", data1);
+		fprintf(targetFile, "ACALL %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0x32: // RETI
@@ -455,16 +440,11 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		// 0x40-0x4F
 	case 0x40: // JC
-		if (data1 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
-		{
-			fprintf(targetFile, "JC -%d\n", 0x100 - data1);
-		}else{
-			fprintf(targetFile, "JC %02XH\n", data1);
-		}
+		fprintf(targetFile, "JC %05XH\n", PC + (char)data1);
 
 		break;
 	case 0x41: // AJMP
-		fprintf(targetFile, "AJMP %03XH\n", data1);
+		fprintf(targetFile, "AJMP %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0x42: // ORL dir A
@@ -526,16 +506,11 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		// 0x50-0x5F
 	case 0x50: // JNC
-		if (data1 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
-		{
-			fprintf(targetFile, "JNC -%d\n", 0x100 - data1);
-		}else{
-			fprintf(targetFile, "JNC %02XH\n", data1);
-		}
+		fprintf(targetFile, "JNC %05XH\n", PC + (char)data1);
 
 		break;
 	case 0x51: // ACALL
-		fprintf(targetFile, "ACALL %03XH\n", data1);
+		fprintf(targetFile, "ACALL %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0x52: // ANL dir A
@@ -597,16 +572,11 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		// 0x60-0x6F
 	case 0x60: // JZ
-		if (data1 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
-		{
-			fprintf(targetFile, "JZ -%d\n", 0x100 - data1);
-		}else{
-			fprintf(targetFile, "JZ %02XH\n", data1);
-		}
+		fprintf(targetFile, "JZ %05XH\n", PC + (char)data1);
 
 		break;
 	case 0x61: // AJMP
-		fprintf(targetFile, "AJMP %03XH\n", data1);
+		fprintf(targetFile, "AJMP %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0x62: // XRL dir A
@@ -668,16 +638,11 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		// 0x70 - 0x7F
 	case 0x70: // JNZ
-		if (data1 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
-		{
-			fprintf(targetFile, "JNZ -%d\n", 0x100 - data1);
-		}else{
-			fprintf(targetFile, "JNZ %02XH\n", data1);
-		}
+		fprintf(targetFile, "JNZ %05XH\n", PC + (char)data1);
 
 		break;
 	case 0x71: // ACALL
-		fprintf(targetFile, "ACALL %03XH\n", data1);
+		fprintf(targetFile, "ACALL %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0x72: // ORL C, bit
@@ -738,17 +703,12 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		// 0x80-0x8F
 	case 0x80: // SJMP
-		if(data1 > 0x80) // Assembler가 인식하지 못하는 경우가 있어 0x80을 넘어가는 경우 10진수 음수로 출력
-		{
-			fprintf(targetFile, "SJMP -%d\n", 0x100 - data1);
-		}else{
-			fprintf(targetFile, "SJMP %02XH\n", data1); 
-		}
+		fprintf(targetFile, "SJMP %05XH\n", PC + (char)data1);
 
 		break;
 
 	case 0x81: // AJMP
-		fprintf(targetFile, "AJMP %03XH\n", data1);
+		fprintf(targetFile, "AJMP %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0x82: // ANL C, bit
@@ -814,7 +774,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0x91: // ACALL
-		fprintf(targetFile, "ACALL %03XH\n", data1);
+		fprintf(targetFile, "ACALL %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0x92: // MOV bit, C
@@ -880,7 +840,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0xA1: // AJMP
-		fprintf(targetFile, "AJMP %03XH\n", data1);
+		fprintf(targetFile, "AJMP %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0xA2: // MOV C, bit
@@ -946,7 +906,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0xB1: // ACALL
-		fprintf(targetFile, "ACALL %03XH\n", data1);
+		fprintf(targetFile, "ACALL %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0xB2: // CPL bit
@@ -1012,7 +972,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0xC1: // AJMP
-		fprintf(targetFile, "AJMP %03XH\n", data1);
+		fprintf(targetFile, "AJMP %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0xC2: // CLR bit
@@ -1078,7 +1038,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0xD1: // ACALL
-		fprintf(targetFile, "ACALL %03XH\n", data1);
+		fprintf(targetFile, "ACALL %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0xD2: // SETB bit
@@ -1094,7 +1054,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0xD5: // DJNZ dir, label
-		fprintf(targetFile, "DJNZ %03XH, %03XH\n", data1, data2);
+		fprintf(targetFile, "DJNZ %03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0xD6: // XCHD A, @R0
@@ -1106,35 +1066,36 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0xD8: // DJNZ R0, label
-		fprintf(targetFile, "DJNZ R0, %03XH\n", data1);
+		fprintf(targetFile, "DJNZ R0, %05XH\n", PC + (char)data1);
 
 		break;
 	case 0xD9: // DJNZ R1, label
-		fprintf(targetFile, "DJNZ R1, %03XH\n", data1);
+		fprintf(targetFile, "DJNZ R1, %05XH\n", PC + (char)data1);
 
 		break;
 	case 0xDA: // DJNZ R2, label
-		fprintf(targetFile, "DJNZ R2, %03XH\n", data1);
+		fprintf(targetFile, "DJNZ R2, %05XH\n", PC + (char)data1);
 
 		break;
 	case 0xDB: // DJNZ R3, label
-		fprintf(targetFile, "DJNZ R3, %03XH\n", data1);
+		if (data1 > 0x80)
+		fprintf(targetFile, "DJNZ R3, %05XH\n", PC + (char)data1);
 
 		break;
 	case 0xDC: // DJNZ R4, label
-		fprintf(targetFile, "DJNZ R4, %03XH\n", data1);
+		fprintf(targetFile, "DJNZ R4, %05XH\n", PC + (char)data1);
 
 		break;
 	case 0xDD: // DJNZ R5, label
-		fprintf(targetFile, "DJNZ R5, %03XH\n", data1);
+		fprintf(targetFile, "DJNZ R5, %05XH\n", PC + (char)data1);
 
 		break;
 	case 0xDE:// DJNZ R6, label
-		fprintf(targetFile, "DJNZ R6, %03XH\n", data1);
+		fprintf(targetFile, "DJNZ R6, %05XH\n", PC + (char)data1);
 
 		break;
 	case 0xDF: // DJNZ R7, label
-		fprintf(targetFile, "DJNZ R7, %03XH\n", data1);
+		fprintf(targetFile, "DJNZ R7, %05XH\n", PC + (char)data1);
 
 		break;
 
@@ -1144,7 +1105,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0xE1: // AJMP
-		fprintf(targetFile, "AJMP %03XH\n", data1);
+		fprintf(targetFile, "AJMP %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0xE2: // MOVX A, @R0
@@ -1210,7 +1171,7 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0xF1: // ACALL
-		fprintf(targetFile, "ACALL %03XH\n", data1);
+		fprintf(targetFile, "ACALL %05XH\n", (PC / 0x800) * 0x800 + 0x100 * (code / 0x20) + data1);
 
 		break;
 	case 0xF2: // MOVX @R0, A
@@ -1371,7 +1332,7 @@ void RunProgram(char* fileName, int end_PC)
 			if (PC == 0) { isEnd = 1; }
 
 			// 프로그램 실행
-			programRunner(fileName, tmp_Code, dat1, dat2); // 해당 명령어 실행
+			programRunner(fileName, tmp_Code, dat1, dat2, PC); // 해당 명령어 실행
 
 		}
 
