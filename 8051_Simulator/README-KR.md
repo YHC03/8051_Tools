@@ -56,6 +56,7 @@ Enter 입력시마다, 자동으로 한 문장씩 실행함
 ##### 주의사항
 inputDat() 함수에서 getPortValue() 함수 호출 시, P0 Port에는 외부에 Pull-Up 저항이 연결되어 있다고 가정한다.  
 SBUF 레지스터는 입력용 레지스터와 출력용 레지스터가 구분되어 있는데, 출력되는 Memory Map에서의 I/O는 (8051으로의 입력, 8051에서의 출력)을 뜻한다.  
+JMP 관련 구문들의 출력은 Assembler에서 이용할 수 있는 구문이 기준이며, 이에 따라 Label의 위치에는 현위치와의 Program Counter의 차이가 아닌 해당 Program Counter의 위치가 출력된다.  
 
 ---
 ## 기획 의도

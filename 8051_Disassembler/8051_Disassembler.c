@@ -918,51 +918,51 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 
 		break;
 	case 0xB4: // CJNE A, DATA, label
-		fprintf(targetFile, "CJNE A, #%03XH, %03XH\n", data1, data2);
+		fprintf(targetFile, "CJNE A, #%03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0xB5: // CJNE A, dir, label
-		fprintf(targetFile, "CJNE A, %03XH, %03XH\n", data1, data2);
+		fprintf(targetFile, "CJNE A, %03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0xB6: // CJNE @R0, DATA, label
-		fprintf(targetFile, "CJNE @R0, #%03XH, %03XH\n", data1, data2);
+		fprintf(targetFile, "CJNE @R0, #%03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0xB7: // CJNE @R1, DATA, label
-		fprintf(targetFile, "CJNE @R1, #%03XH, %03XH\n", data1, data2);
+		fprintf(targetFile, "CJNE @R1, #%03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0xB8: // CJNE R0, DATA, label
-		fprintf(targetFile, "CJNE R0, #%03XH, %03XH\n", data1, data2);
+		fprintf(targetFile, "CJNE R0, #%03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0xB9: // CJNE R1, DATA, label
-		fprintf(targetFile, "CJNE R1, #%03XH, %03XH\n", data1, data2);
+		fprintf(targetFile, "CJNE R1, #%03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0xBA: // CJNE R2, DATA, label
-		fprintf(targetFile, "CJNE R2, #%03XH, %03XH\n", data1, data2);
+		fprintf(targetFile, "CJNE R2, #%03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0xBB: // CJNE R3, DATA, label
-		fprintf(targetFile, "CJNE R3, #%03XH, %03XH\n", data1, data2);
+		fprintf(targetFile, "CJNE R3, #%03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0xBC: // CJNE R4, DATA, label
-		fprintf(targetFile, "CJNE R4, #%03XH, %03XH\n", data1, data2);
+		fprintf(targetFile, "CJNE R4, #%03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0xBD: // CJNE R5, DATA, label
-		fprintf(targetFile, "CJNE R5, #%03XH, %03XH\n", data1, data2);
+		fprintf(targetFile, "CJNE R5, #%03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0xBE: // CJNE R6, DATA, label
-		fprintf(targetFile, "CJNE R6, #%03XH, %03XH\n", data1, data2);
+		fprintf(targetFile, "CJNE R6, #%03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 	case 0xBF: // CJNE R7, DATA, label
-		fprintf(targetFile, "CJNE R7, #%03XH, %03XH\n", data1, data2);
+		fprintf(targetFile, "CJNE R7, #%03XH, %05XH\n", data1, PC + (char)data2);
 
 		break;
 

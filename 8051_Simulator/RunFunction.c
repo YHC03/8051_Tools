@@ -1534,7 +1534,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 		}
 		return PC;
 	case 0xB4: // CJNE A, DATA, label
-		printf("CJNE A, #%03XH, %03XH\n", data1, data2);
+		printf("CJNE A, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1543,7 +1543,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xB5: // CJNE A, dir, label
-		printf("CJNE A, %03XH, %03XH\n", data1, data2);
+		printf("CJNE A, %03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1552,7 +1552,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xB6: // CJNE @R0, DATA, label
-		printf("CJNE @R0, #%03XH, %03XH\n", data1, data2);
+		printf("CJNE @R0, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1561,7 +1561,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xB7: // CJNE @R1, DATA, label
-		printf("CJNE @R1, #%03XH, %03XH\n", data1, data2);
+		printf("CJNE @R1, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1570,7 +1570,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xB8: // CJNE R0, DATA, label
-		printf("CJNE R0, #%03XH, %03XH\n", data1, data2);
+		printf("CJNE R0, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1579,7 +1579,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xB9: // CJNE R1, DATA, label
-		printf("CJNE R1, #%03XH, %03XH\n", data1, data2);
+		printf("CJNE R1, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1588,7 +1588,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xBA: // CJNE R2, DATA, label
-		printf("CJNE R2, #%03XH, %03XH\n", data1, data2);
+		printf("CJNE R2, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1597,7 +1597,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xBB: // CJNE R3, DATA, label
-		printf("CJNE R3, #%03XH, %03XH\n", data1, data2);
+		printf("CJNE R3, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1606,7 +1606,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xBC: // CJNE R4, DATA, label
-		printf("CJNE R4, #%03XH, %03XH\n", data1, data2);
+		printf("CJNE R4, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1615,7 +1615,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xBD: // CJNE R5, DATA, label
-		printf("CJNE R5, #%03XH, %03XH\n", data1, data2);
+		printf("CJNE R5, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1624,7 +1624,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xBE: // CJNE R6, DATA, label
-		printf("CJNE R6, #%03XH, %03XH\n", data1, data2);
+		printf("CJNE R6, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
@@ -1633,7 +1633,7 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		return PC;
 	case 0xBF: // CJNE R7, DATA, label
-		printf("CJNE R7, #%03XH, %03XH\n", data1, data2);
+		printf("CJNE R7, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 

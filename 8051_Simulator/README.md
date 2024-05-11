@@ -57,6 +57,7 @@ It prints memory state of 8051(also prints the state of PSW, TCON memory in bit)
 ##### Things to know
 When calling getPortValue() function at inputDat() function, we will assume that there is a pull-up resistor at P0 Port.  
 The SBUF(0x99) has 2 different memory, one for send and another for receive. The I/O on the memory map printed means (Input for 8051, Output of 8051).  
+Outputs of JMP-related command are based on assembler-available commands, so program counter value of the destination will be printed at the label's site, not the difference between the program counter value of current location and the program counter value of the label's location.  
 
 ---
 ## The Reason why I Made This
