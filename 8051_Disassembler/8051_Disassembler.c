@@ -784,8 +784,8 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		fprintf(targetFile, "MOV %03XH, C\n", data1);
 
 		break;
-	case 0x93: // MOVC A, @A + DPTR
-		fprintf(targetFile, "MOVC A, @A + DPTR\n");
+	case 0x93: // MOVC A, @A+DPTR
+		fprintf(targetFile, "MOVC A, @A+DPTR\n");
 
 		break;
 	case 0x94: // SUBB A, data

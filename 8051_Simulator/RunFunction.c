@@ -1265,8 +1265,8 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 			clearBitAddr(data1);
 		}
 		return PC;
-	case 0x93: // MOVC A, @A + DPTR
-		printf("MOVC A, @A + DPTR\n");
+	case 0x93: // MOVC A, @A+DPTR
+		printf("MOVC A, @A+DPTR\n");
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
