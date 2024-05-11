@@ -1,69 +1,72 @@
-# 8051 Simulator
+# 8051 CLI Simulator
+
+[Korean](https://github.com/YHC03/8051_Tools/blob/main/8051_Simulator/README-KR.md)  
 
 Freeware  
 
-#### 이용 언어
+#### Language Used
 C
 
-###### 이용 라이브러리(헤더 파일)
-stdio.h : stdin, stdout 이용과 File 입출력을 위함  
-stdlib.h : exit() 함수를 사용하기 위함  
-string.h : 읽어들일 File 주소와 이름에 공백이 있는 경우를 처리하기 위함  
-math.h : pow() 함수를 사용하기 위함  
-windows.h : system("PAUSE"), system("cls") 함수를 사용하기 위함  
+###### Library(Header File) Used
+stdio.h: To use stdin, stdout and File I/O.  
+stdlib.h: To use exit() function.  
+string.h: To process blanks on input file path.  
+math.h: To use pow() function.  
+windows.h: To use system() function, especially PAUSE and cls command.  
 
 ---
-## 세부 파일 소개
-8051_Variables: 8051 Chip 관련 상수와, Chip의 RAM, ROM 전역 변수를 저장함   
-RunFunction: 8051 Chip의 명령어를 읽어들어 실행함  
-RunSpecific: RunFunction에서 요청한 명령들의 함수를 실제로 실행함  
-Timer_and_Interrupt: 8051 Timer와 Interrupt를 실행함  
-FileInput: 실행할 .hex 파일을 읽어들임  
-8051_Simulator: 전체 프로그램을 관리하고 실행함  
+## Introducing the Specific Files
+8051_Variables: Saves constants related to 8051 chip and global variables of 8051 Chip.  
+RunFunction: Read and run commands of 8051 Chip.  
+RunSpecific: Actually run functions which is called at RunFunction.  
+Timer_and_Interrupt: Runs 8051 timers and interrupts.  
+FileInput: Read the .hex file to input.  
+8051_Simulator: Manage and run all program.  
 
 ---
-## 작동 방법
-모든 Source 및 Header 파일을 Build해 .exe 파일 생성 후, "(파일명).exe" "(HEX 파일 위치).hex" 명령어로 프로그램을 실행한다.  
-실행할 HEX 파일의 주소와 이름을 char* argv[]로 받는다.  
-파일이 정상적으로 Load되지 않는 경우, 오류가 나오며 프로그램이 종료된다.  
-HEX 파일의 Parity에서 오류가 발생하는 경우, Parity Error의 위치를 알려주며 프로그램이 종료한다.  
+## How to Run
+Build all and create .exe file. After creating the file, run program at command line by entering commands as "(FileName).exe" "(Location of .hex file).hex".  
+If the file was not correctly loaded, the program stops while notifying there is a error.  
+If the parity error occurs at .hex file, the program stops while notifying which line has the parity error.  
 
 ---
-## 작동 설명
+## Introduction to Run the Program
 
-### 1. 초기 화면
-0 선택 시, 단계별 실행(디버그)  
-1 선택 시, Program Counter가 .hex 파일의 종료 지점의 Program Counter의 이전까지(Interrupt Enable 여부와는 무관하다), 혹은 Program Counter Overflow 발생시까지 계속 실행 후, 결과 출력, 이후 프로그램 종료  
-
----
-### 2. 디버그 화면
-Enter 입력시마다, 자동으로 한 문장씩 실행함  
-다음으로 실행될 문장과, 8051의 메모리 정보(PSW, TCON은 bit 단위로도), P0-P3 Port의 Latch 정보를 출력함  
+### 1. Initial Window
+If you choose 0, it runs as step-by-step debuging mode.  
+If you choose 1(or any other number except 0), the simulator automatically runs until the program counter goes over the .hex file's last program counter(Regardless of the state of interrupt), or the program counter overflows. After the program stops, it prints the results, and terminates the program.  
 
 ---
-## 구현한 기능
-HEX File의 Parity를 확인하는 기능  
-MOVX를 제외한 모든 8051의 명령어  
-Timer/Counter, Interrupt 기능  
-P0-P3 Port의 Latch에 저장된 데이터 조회 기능  
-Port 입력 기능 (특정 Port만을 수정할 수는 없음. 다만, 기존값을 그대로 입력하는 것은 가능함.)  
-
-##### 이용 불가 기능
-Serial 관련 기능 이용 불가(Interrupt Routine또한 구현되지 않음)  
-외부 메모리 이용 불가  
-
-##### 주의사항
-inputDat() 함수에서 getPortValue() 함수 호출 시, P0 Port에는 외부에 Pull-Up 저항이 연결되어 있다고 가정한다.  
+### 2. Debug Window
+If you choose 0(or any other number except 1), it runs the next command.  
+If you choose 1, you can set the input state of Port 0-3.  
+It prints memory state of 8051(also prints the state of PSW, TCON memory in bit), latch information of Port 0-3, and command that runs next time.  
 
 ---
-## 기획 의도
-대학교 3학년 1학기 마이크로프로세서및HDL 과목에서 배우는 8051 칩의 Simulator를 구현해보고자 하였다.  
+## Available Functions
+- Checking parity of .hex file  
+- All insturction set of 8051 except MOVX command  
+- 8051 Timer/Counter and Interrupt  
+- Visualize Latch information of Port 0-3  
+- Port 0-3 Input(You cannot modify only a specific port. However, you can just type the privious state of the port.)  
+
+##### Unavailable Functions
+- Serial-related functions(Also Serial interrupt routine was not implemented)  
+- External memory is not available  
+
+##### Things to know
+When calling getPortValue() function at inputDat() function, we will assume that there is a pull-up resistor at P0 Port.  
+The SBUF(0x99) has 2 different memory, one for send and another for receive. The I/O on the memory map printed means (Input for 8051, Output of 8051).  
 
 ---
-## 제작 과정에서 참고한 자료
+## The Reason why I Made This
+To make a simulator of 8051 chip - which I learns at Microprocessor and HDL class(in University 3rd grade, 1st semester).  
+
+---
+## Reference 
 8051 Instruction Set  
-홍익대학교 마이크로프로세서및HDL 과목(2024학년도 1학기) 강의록  
+Lecture notes of Microprocessor and HDL class, Hongik University(First Semester of 2024)  
 
 ---
-작성자 : YHC03  
-최종 작성일 : 2024/05/11  
+Creator : YHC03  
+Last Modified Date : 2024/05/11  

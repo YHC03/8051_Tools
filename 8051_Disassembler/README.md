@@ -1,27 +1,28 @@
 # 8051 Disassember
 
+[Korean](https://github.com/YHC03/8051_Tools/blob/main/8051_Disassembler/README-KR.md)  
+
 Freeware  
 
-#### 이용 언어
+#### Language Used
 C
 
-###### 이용 라이브러리(헤더 파일)
-stdio.h : stdin, stdout 이용과 File 입출력을 위함  
-stdlib.h : exit() 함수를 사용하기 위함  
-string.h : 읽어들일 File 주소와 이름에 공백이 있는 경우를 처리하기 위함  
+###### Library(Header File) Used
+stdio.h: To use stdin, stdout and File I/O.  
+stdlib.h: To use exit() function.  
+string.h: To process blanks on input file path.  
 
 ---
-## 작동 방법
-.exe 파일 생성 후, "(파일명).exe" "(HEX 파일 위치).hex" 명령어로 프로그램을 실행한다.  
-실행할 HEX 파일의 주소와 이름을 char* argv[]로 받는다.  
-파일이 정상적으로 Load되지 않는 경우, 오류가 나오며 프로그램이 종료된다.  
-HEX 파일의 Parity에서 오류가 발생하는 경우, Parity Error의 위치를 알려주며 프로그램이 종료한다.  
-이 외의 정상적인 경우에는, (HEX 파일 위치).hex 파일 위치에 결과가 (HEX 파일 위치).a51 파일로 생성된다.  
+## How to Run
+Build and create .exe file. After creating the file, run program at command line by entering commands as "(FileName).exe" "(Location of .hex file).hex".  
+If the file was not correctly loaded, the program stops while notifying there is a error.  
+If the parity error occurs at .hex file, the program stops while notifying which line has the parity error.  
+Otherwise, the (Name of the .hex file).a51 file, which contains the result, will be created at the location of the .hex file.  
 
 ---
-## 제작 과정에서 참고, 이용한 자료
-같은 Repository에 있는 8051 Simulator  
+## Used when Creating this Project
+[8051 Simulator in the Same Repository](https://github.com/YHC03/8051_Tools/tree/main/8051_Simulator)  
 
 ---
-작성자 : YHC03  
-최종 작성일 : 2024/05/08  
+Creator : YHC03  
+Last Modified Date : 2024/05/11  

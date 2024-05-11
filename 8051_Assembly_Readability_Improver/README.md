@@ -1,33 +1,34 @@
 # 8051 Assembly Code Readability Improver
 
+[Korean](https://github.com/YHC03/8051_Tools/blob/main/8051_Assembly_Readability_Improver/README-KR.md)  
+
 Freeware  
 
-#### 이용 언어
+#### Language Used
 C
 
-###### 이용 라이브러리(헤더 파일)
-stdio.h : stdin, stdout 이용과 File 입출력을 위함  
-string.h : 읽어들일 File 주소와 이름에 공백이 있는 경우를 처리하기 위함  
+###### Library(Header File) Used
+stdio.h: To use stdin, stdout and File I/O.  
+string.h: To process blanks on input file path.  
 
 ---
-## 작동 방법
-.exe 파일 생성 후, "(파일명).exe" "(HEX 파일 위치).hex" 명령어로 프로그램을 실행한다.  
-실행할 HEX 파일의 주소와 이름을 char* argv[]로 받는다.  
-파일이 정상적으로 Load되지 않는 경우, 오류가 나오며 프로그램이 종료된다.  
-이 외의 정상적인 경우에는, 입력 파일 위치에 출력이 입력 파일명에 _Processd가 붙은 파일로 생성된다.  
+## How to Run
+.Build and create .exe file. After creating the file, run program at command line by entering commands as "(FileName).exe" "(Location of Assembly file).a51".  
+If the file was not correctly loaded, the program stops while notifying there is a error.  
+Otherwise, the (Name of the .a51 file)_Processed.a51 file, which contains the result, will be created at the location of the .a51 file.  
 
-## 기능
-1. 공백(탭)이 있으면 공백 하나로 바꾸기(다음 단어 발견 시 공백도 함께 작성)  
-- 가장 처음부터 공백인 경우, 공백 삭제  
-- :(Colon)이 가장 처음 나온 경우, 공백 삭제  
+## Functions
+1. If there is blanks or tabs, change with a blank(If the next letter was found, blanks will be writted with the next letter).  
+- If the line starts with blanks, delete that blanks.  
+- If the :(colon) was first encountered at the line, delete the blank between label name and colon.  
   
-2. 소문자 알파벳을 대문자로 바꾸기 (주석 제외)  
-3. , 뒤에 공백 없는 경우 공백 생성  
-4. Assembly에서 주석 표기를 하는 ;(Semicolon) 뒤에 공백이 최소 1개 이상 있도록 변경  
-- 주석 뒤에 공백 유무와 관계없이, 주석의 내용 그대로 출력되는 코드를 해당 소스 코드 위에 주석으로 남겨두었음  
+2. Change small letter Alphabet to Capital Letter, except for comments.  
+3. If there is no blanks behind ,(comma), create a blank.  
+4. Make at least one blank just behind the ;(semicolon), which means comment in Assembly.  
+- There is also a commented code that writes comment data exactly the same, regardless the blank right behind the semicolon.  
 
-5. 공백만 있는 줄의 공백 제거  
+5. Delete the blanks on the line which only has blanks.(It does not delete the entire line only with blanks.)  
 
 ---
-작성자 : YHC03  
-최종 작성일 : 2024/05/08  
+Creator : YHC03  
+Last Modified Date : 2024/05/11  
