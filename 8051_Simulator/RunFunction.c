@@ -151,7 +151,7 @@ void printChip(unsigned long long int cycle, int programCounter)
 * 입력 변수 : code(명령 코드), data1(추가데이터1), data2(추가데이터2), PC(현재의 Program Counter 위치), isDebugMode(디버그 모드 여부)
 * 출력 변수 : 다음에 실행할 Program Counter의 위치
 */
-int programRunner(unsigned char code, unsigned char data1, unsigned char data2, unsigned short PC, char isDebugMode)
+unsigned short programRunner(unsigned char code, unsigned char data1, unsigned char data2, unsigned short PC, char isDebugMode)
 {
 	// 사용할 Register의 위치 가져오기
 	unsigned char PSWROM = chip.internal_RAM[0xD0] & 0x18;
@@ -2262,7 +2262,7 @@ void RunProgram(unsigned char mode, int end_PC)
 		if (PC > end_PC && mode){ isEnd = 1; }
 
 		// Timer 계산
-		timerControl(cycle - prevCycle);
+		timerControl((int)(cycle - prevCycle));
 
 
 		// 프로그램 실행

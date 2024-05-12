@@ -9,6 +9,8 @@
 #ifndef _8051_VARIABLES_H_
 #define _8051_VARIABLES_H_
 
+#include<windows.h> // 다른 위치에서 include시 오류가 발생하는 경우가 있음
+
 typedef struct
 {
 	unsigned char internal_RAM[256]; // Special Function Register, SBUF의 수신(8051 기준 Read) Register 포함

@@ -57,7 +57,7 @@ void putParity()
 * 입력 변수 : destination
 * 출력 변수 없음
 */
-void incFunc(short dest)
+void incFunc(unsigned char dest)
 {
 	// 목적지가 SBUF인 경우, SBUF의 8051기준 수신용 RAM에서 1을 더한 값을 8051의 송신용 RAM에 저장한다
 	if (dest == SBUF)
@@ -76,7 +76,7 @@ void incFunc(short dest)
 * 입력 변수 : destination
 * 출력 변수 없음
 */
-void decFunc(short dest)
+void decFunc(unsigned char dest)
 {
 	// 목적지가 SBUF인 경우, SBUF의 8051기준 수신용 RAM에서 1을 뺀 값을 8051의 송신용 RAM에 저장한다
 	if (dest == SBUF)
@@ -95,7 +95,7 @@ void decFunc(short dest)
 * 입력 변수 : destination, source, isDat(상수 여부)
 * 출력 변수 없음
 */
-void movFunc(short dest, short src, char isDat)
+void movFunc(unsigned char dest, unsigned char src, char isDat)
 {
 	// isDat = 0(src(주소) -> dest), isDat = 1(src(데이터) -> dest)
 
@@ -134,7 +134,7 @@ void movFunc(short dest, short src, char isDat)
 * 입력 변수 : source, isDat(상수 여부), isCarry(Carry 연산 여부)
 * 출력 변수 없음
 */
-void addFunc(short src, char isDat, char isCarry)
+void addFunc(unsigned char src, char isDat, char isCarry)
 {
 	// 기존값 저장(PSW 조정을 위함)
 	unsigned char prevDat = chip.internal_RAM[0xE0];
@@ -198,7 +198,7 @@ void addFunc(short src, char isDat, char isCarry)
 * 입력 변수 : source, isDat(상수 여부)
 * 출력 변수 없음
 */
-void subbFunc(short src, char isDat)
+void subbFunc(unsigned char src, char isDat)
 {
 	// 기존값 저장(PSW 조정을 위함)
 	unsigned char prevDat = chip.internal_RAM[0xE0];

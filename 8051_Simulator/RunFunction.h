@@ -18,7 +18,7 @@
 
 // 프로그램 구동
 void RunProgram(unsigned char mode, int end_PC);
-int programRunner(unsigned char code, unsigned char data1, unsigned char data2, unsigned short PC, char isDebugMode);
+unsigned short programRunner(unsigned char code, unsigned char data1, unsigned char data2, unsigned short PC, char isDebugMode);
 
 // 출력
 void printChip(unsigned long long int cycle, int programCounter);

@@ -15,21 +15,19 @@
 
 // 8051 내부 함수 구현
 
+// MOV 연산
+void movFunc(unsigned char dest, unsigned char src, char isDat);
 
 // Bit 연산
 char getBitAddr(unsigned char location); // Bit값 가져오기
 void setBitAddr(unsigned char location); // SETB
 void clearBitAddr(unsigned char location); // CLR
 
-// 명령 이후의 처리
-void putParity(); // ACC의 Parity
-void syncLatch(char port); // Latch 연동
-
 // 가.감 연산
-void incFunc(short dest); // INC (DPTR 제외)
-void decFunc(short dest); // DEC
-void addFunc(short src, char isDat, char isCarry); // ADD, ADDC
-void subbFunc(short src, char isDat); // SUBB
+void incFunc(unsigned char dest); // INC (DPTR 제외)
+void decFunc(unsigned char dest); // DEC
+void addFunc(unsigned char src, char isDat, char isCarry); // ADD, ADDC
+void subbFunc(unsigned char src, char isDat); // SUBB
 
 // 곱하기, 나누기
 void mulAndDiv(char isDiv);
@@ -43,12 +41,16 @@ void orOperation(unsigned char dest, unsigned char src, char isData, char isBit)
 void andOperation(unsigned char dest, unsigned char src, char isData, char isBit); // ANL
 void xorOperation(unsigned char dest, unsigned char src, char isData); // XRL
 
-// Swap
+// SWITCH 연산
 void swapOperation(unsigned char src); // XCH
 void halfSwapOperation(unsigned char src); // XCHD
 
-// DA 함수
+// DA 연산
 void DAOperation();
+
+// 명령 이후의 처리
+void putParity(); // ACC의 Parity
+void syncLatch(char port); // Latch 연동
 
 
 #endif
