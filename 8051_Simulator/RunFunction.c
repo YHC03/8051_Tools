@@ -1158,12 +1158,12 @@ int programRunner(unsigned char code, unsigned char data1, unsigned char data2, 
 
 		mulAndDiv(1);
 		return PC;
-	case 0x85: // MOV dir, dir
-		printf("MOV %03XH, %03XH\n", data1, data2);
+	case 0x85: // MOV dir, dir (Source, Destination 순서로 .hex 파일이 입력됨)
+		printf("MOV %03XH, %03XH\n", data2, data1);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
-		movFunc(data1, data2, 0);
+		movFunc(data2, data1, 0);
 		return PC;
 	case 0x86: // MOV dir, @R0
 		printf("MOV %03XH, @R0\n", data1);

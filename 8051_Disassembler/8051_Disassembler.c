@@ -726,8 +726,8 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 		fprintf(targetFile, "DIV AB\n");
 
 		break;
-	case 0x85: // MOV dir, dir
-		fprintf(targetFile, "MOV %03XH, %03XH\n", data1, data2);
+	case 0x85: // MOV dir, dir (Source, Destination 순서로 .hex 파일이 입력됨)
+		fprintf(targetFile, "MOV %03XH, %03XH\n", data2, data1);
 
 		break;
 	case 0x86: // MOV dir, @R0
