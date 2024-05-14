@@ -44,25 +44,28 @@ void getPortValue()
 /* inputDat() 함수
 *
 * 기능 : Port Data Input 등의 입력 값이 필요한 경우 이를 수행할 수 있도록 한다.
-* 입력 변수 없음
-* 출력 변수 없음
+* 입출력 변수 없음
 */
 void inputDat()
 {
 	int mode = 0;
-retry:
-	// 모드 입력
-	printf("1: Pin Input, Other Number: Run Next. : ");
-	scanf("%d", &mode);
 
-	switch (mode)
+	// 프로그램 시작을 입력받을때까지 무한 반복한다.
+	while (1)
 	{
-	case 1: // Pin 입력
-		getPortValue();
-		goto retry;
+		// 모드 입력
+		printf("1: Pin Input, Other Number: Run Next. : ");
+		scanf("%d", &mode);
 
-	default: // 시작
-		return;
+		switch (mode)
+		{
+		case 1: // Port 입력
+			getPortValue();
+			break;
+
+		default: // 시작
+			return;
+		}
 	}
 
 	return;
