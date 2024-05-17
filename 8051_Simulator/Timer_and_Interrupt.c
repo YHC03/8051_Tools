@@ -402,7 +402,7 @@ int interruptControl(int PC)
 
 
 	// 각 인터럽트별로 활성화 확인
-	if (getBitAddr(EX0)) // 외부 인터럽트 0
+	if (getBitAddr(EX0) && !intData[0]) // 외부 인터럽트 0 (해당 인터럽트 비활성화시에만 실행)
 	{
 		// IE0이 활성화되었으며 IT0 = 1이고 해당 인터럽트가 실행 대기나 실행 중이 아니거나, 혹은 IT0 = 0이며 P3.2가 0일 때
 		if ((getBitAddr(IE0) && getBitAddr(IT0) && !intData[0]) || (!getBitAddr(0xB2/*P3.2*/) && !getBitAddr(IT0)))
@@ -413,7 +413,7 @@ int interruptControl(int PC)
 	}
 	INT0 = getBitAddr(0xB2/*P3.2*/);
 
-	if (getBitAddr(ET0)) // 타이머 인터럽트 0
+	if (getBitAddr(ET0) && !intData[1]) // 타이머 인터럽트 0 (해당 인터럽트 비활성화시에만 실행)
 	{
 		if (getBitAddr(TF0))
 		{
@@ -421,7 +421,7 @@ int interruptControl(int PC)
 		}
 	}
 
-	if (getBitAddr(EX1)) // 외부 인터럽트 1
+	if (getBitAddr(EX1) && !intData[2]) // 외부 인터럽트 1 (해당 인터럽트 비활성화시에만 실행)
 	{
 		// IE1이 활성화되었으며 IT1 = 1이고 해당 인터럽트가 실행 대기나 실행 중이 아니거나, 혹은 IT1 = 0이며 P3.3이 0일 때
 		if ((getBitAddr(IE1) && getBitAddr(IT1) && !intData[2]) || (!getBitAddr(0xB3/*P3.3*/) && !getBitAddr(IT1)))
@@ -432,7 +432,7 @@ int interruptControl(int PC)
 	}
 	INT1 = getBitAddr(0xB3/*P3.3*/);
 
-	if (getBitAddr(ET1)) // 타이머 인터럽트 1
+	if (getBitAddr(ET1) && !intData[3]) // 타이머 인터럽트 1 (해당 인터럽트 비활성화시에만 실행)
 	{
 		if (getBitAddr(TF1))
 		{
