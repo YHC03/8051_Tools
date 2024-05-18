@@ -47,8 +47,7 @@ void timerControl(int cycle)
 							chip.internal_RAM[TH0] = 0;
 							setBitAddr(TF0);
 						}
-					}
-					else {
+					}else{
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
 					}
 					break;
@@ -67,8 +66,7 @@ void timerControl(int cycle)
 							// Timer0 초기화 후, TF0를 1로 설정
 							setBitAddr(TF0);
 						}
-					}
-					else {
+					}else{
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
 					}
 					break;
@@ -84,8 +82,7 @@ void timerControl(int cycle)
 
 						// Timer0 초기화 후, TF0를 1로 설정
 						setBitAddr(TF0);
-					}
-					else {
+					}else{
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
 					}
 					break;
@@ -98,8 +95,7 @@ void timerControl(int cycle)
 
 						// Timer0(TL0) 초기화 후, TF0를 1로 설정
 						setBitAddr(TF0);
-					}
-					else {
+					}else{
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
 					}
 					break;
@@ -116,8 +112,7 @@ void timerControl(int cycle)
 				// Timer0(TH0) 초기화 후, TF1를 1로 설정
 				chip.internal_RAM[TH0] += cycle;
 				setBitAddr(TF1);
-			}
-			else {
+			}else{
 				chip.internal_RAM[TH0] += cycle;
 			}
 		}
@@ -155,8 +150,7 @@ void timerControl(int cycle)
 							chip.internal_RAM[TH1] = 0;
 							setBitAddr(TF1);
 						}
-					}
-					else {
+					}else{
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
 					}
 					break;
@@ -175,8 +169,7 @@ void timerControl(int cycle)
 							// Timer1 초기화 후, TF1를 1로 설정
 							setBitAddr(TF1);
 						}
-					}
-					else {
+					}else{
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
 					}
 					break;
@@ -192,8 +185,7 @@ void timerControl(int cycle)
 
 						// Timer1 초기화 후, TF1를 1로 설정
 						setBitAddr(TF1);
-					}
-					else {
+					}else{
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
 					}
 					break;
@@ -230,31 +222,24 @@ char getInterruptPriorityRun()
 	if ((interruptPrior & 0x01) && intData[0] == 2) // Priority 설정한 Interrupt 0 실행 대기
 	{
 		return 0;
-	}
-	else if ((interruptPrior & 0x01) && intData[0] == 1) { // Priority 설정한 Interrupt 0 실행중
+	}else if ((interruptPrior & 0x01) && intData[0] == 1){ // Priority 설정한 Interrupt 0 실행중
 		return -1;
 
-	}
-	else if ((interruptPrior & 0x02) && intData[1] == 2) { // Priority 설정한 Interrupt 1 실행 대기
+	}else if ((interruptPrior & 0x02) && intData[1] == 2){ // Priority 설정한 Interrupt 1 실행 대기
 		clearBitAddr(TF0);
 		return 1;
-	}
-	else if ((interruptPrior & 0x02) && intData[1] == 1) { // Priority 설정한 Interrupt 1 실행중
+	}else if ((interruptPrior & 0x02) && intData[1] == 1){ // Priority 설정한 Interrupt 1 실행중
 		return -1;
 
-	}
-	else if ((interruptPrior & 0x04) && intData[2] == 2) { // Priority 설정한 Interrupt 2 실행 대기
+	}else if ((interruptPrior & 0x04) && intData[2] == 2){ // Priority 설정한 Interrupt 2 실행 대기
 		return 2;
-	}
-	else if ((interruptPrior & 0x04) && intData[2] == 1) { // Priority 설정한 Interrupt 2 실행중
+	}else if ((interruptPrior & 0x04) && intData[2] == 1){ // Priority 설정한 Interrupt 2 실행중
 		return -1;
 
-	}
-	else if ((interruptPrior & 0x08) && intData[3] == 2) { // Priority 설정한 Interrupt 3 실행 대기
+	}else if ((interruptPrior & 0x08) && intData[3] == 2){ // Priority 설정한 Interrupt 3 실행 대기
 		clearBitAddr(TF1);
 		return 3;
-	}
-	else if ((interruptPrior & 0x08) && intData[3] == 1) { // Priority 설정한 Interrupt 3 실행중
+	}else if ((interruptPrior & 0x08) && intData[3] == 1){ // Priority 설정한 Interrupt 3 실행중
 		return -1;
 	}
 
@@ -262,31 +247,24 @@ char getInterruptPriorityRun()
 	if (!(interruptPrior & 0x01) && intData[0] == 2) // Priority 설정하지 않은 Interrupt 0 실행 대기
 	{
 		return 0;
-	}
-	else if (!(interruptPrior & 0x01) && intData[0] == 1) { // Priority 설정하지 않은 Interrupt 0 실행중
+	}else if (!(interruptPrior & 0x01) && intData[0] == 1){ // Priority 설정하지 않은 Interrupt 0 실행중
 		return -1;
 
-	}
-	else if (!(interruptPrior & 0x02) && intData[1] == 2) { // Priority 설정하지 않은 Interrupt 1 실행 대기
+	}else if (!(interruptPrior & 0x02) && intData[1] == 2){ // Priority 설정하지 않은 Interrupt 1 실행 대기
 		clearBitAddr(TF0);
 		return 1;
-	}
-	else if (!(interruptPrior & 0x02) && intData[1] == 1) { // Priority 설정하지 않은 Interrupt 1 실행중
+	}else if (!(interruptPrior & 0x02) && intData[1] == 1){ // Priority 설정하지 않은 Interrupt 1 실행중
 		return -1;
 
-	}
-	else if (!(interruptPrior & 0x04) && intData[2] == 2) { // Priority 설정하지 않은 Interrupt 2 실행 대기
+	}else if (!(interruptPrior & 0x04) && intData[2] == 2){ // Priority 설정하지 않은 Interrupt 2 실행 대기
 		return 2;
-	}
-	else if (!(interruptPrior & 0x04) && intData[2] == 1) { // Priority 설정하지 않은 Interrupt 2 실행중
+	}else if (!(interruptPrior & 0x04) && intData[2] == 1){ // Priority 설정하지 않은 Interrupt 2 실행중
 		return -1;
 
-	}
-	else if (!(interruptPrior & 0x08) && intData[3] == 2) { // Priority 설정하지 않은 Interrupt 3 실행 대기
+	}else if (!(interruptPrior & 0x08) && intData[3] == 2){ // Priority 설정하지 않은 Interrupt 3 실행 대기
 		clearBitAddr(TF1);
 		return 3;
-	}
-	else if (!(interruptPrior & 0x08) && intData[3] == 1) { // Priority 설정하지 않은 Interrupt 3 실행중
+	}else if (!(interruptPrior & 0x08) && intData[3] == 1){ // Priority 설정하지 않은 Interrupt 3 실행중
 		return -1;
 	}
 
@@ -309,17 +287,14 @@ void clearInterrupt()
 		intData[0] = 0;
 		clearBitAddr(IE0);
 		return;
-	}
-	else if ((interruptPrior & 0x02) && intData[1] == 1) { // Priority 설정한 Interrupt 1 실행 종료
+	}else if ((interruptPrior & 0x02) && intData[1] == 1){ // Priority 설정한 Interrupt 1 실행 종료
 		intData[1] = 0;
 		return;
-	}
-	else if ((interruptPrior & 0x04) && intData[2] == 1) { // Priority 설정한 Interrupt 2 실행 종료
+	}else if ((interruptPrior & 0x04) && intData[2] == 1){ // Priority 설정한 Interrupt 2 실행 종료
 		intData[2] = 0;
 		clearBitAddr(IE1);
 		return;
-	}
-	else if ((interruptPrior & 0x08) && intData[3] == 1) { // Priority 설정한 Interrupt 3 실행 종료
+	}else if ((interruptPrior & 0x08) && intData[3] == 1){ // Priority 설정한 Interrupt 3 실행 종료
 		intData[3] = 0;
 		return;
 	}
@@ -330,17 +305,14 @@ void clearInterrupt()
 		intData[0] = 0;
 		clearBitAddr(IE0);
 		return;
-	}
-	else if (intData[1] == 1) { // Priority 설정 안 한 Interrupt 1 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
+	}else if (intData[1] == 1){ // Priority 설정 안 한 Interrupt 1 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 		intData[1] = 0;
 		return;
-	}
-	else if (intData[2] == 1) { // Priority 설정 안 한 Interrupt 2 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
+	}else if (intData[2] == 1){ // Priority 설정 안 한 Interrupt 2 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 		intData[2] = 0;
 		clearBitAddr(IE1);
 		return;
-	}
-	else if (intData[3] == 1) { // Priority 설정 안 한 Interrupt 3 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
+	}else if (intData[3] == 1){ // Priority 설정 안 한 Interrupt 3 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 		intData[3] = 0;
 		return;
 	}
@@ -388,15 +360,13 @@ int interruptControl(int PC)
 	if ((!getBitAddr(0xB2/*P3.2*/) && INT0) || getBitAddr(IE0)) // P3.2가 Falling Edge거나 IE0 = 1(현상 유지)일 때
 	{
 		setBitAddr(IE0);
-	}
-	else {
+	}else{
 		clearBitAddr(IE0);
 	}
 	if ((!getBitAddr(0xB3/*P3.3*/) && INT1) || getBitAddr(IE1)) // P3.3이 Falling Edge거나 IE1 = 1(현상 유지)일 때
 	{
 		setBitAddr(IE1);
-	}
-	else {
+	}else{
 		clearBitAddr(IE1);
 	}
 
@@ -455,8 +425,7 @@ int interruptControl(int PC)
 
 		// Interrupt 위치로 PC 이동
 		return INTERRUPT_PC[res];
-	}
-	else { // 작동할 Interrput가 없는 경우
+	}else{ // 작동할 Interrput가 없는 경우
 		// 다음 PC값 실행
 		return PC;
 	}
