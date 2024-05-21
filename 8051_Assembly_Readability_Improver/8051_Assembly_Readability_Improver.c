@@ -2,18 +2,6 @@
 #include<string.h>
 
 
-// 문자열 초기화 함수(targ 문자열을 len 길이만큼 \0으로 초기화한다
-void initChar(char* targ, int len)
-{
-	for (int i = 0; i < len; i++)
-	{
-		targ[i] = '\0';
-	}
-
-	return;
-}
-
-
 /* process() 함수
 * 
 * 기능 : 주어진 어셈블리어 파일의 다음과 같은 조정을 하고, (해당 파일 주소와 이름)_Processd.(해당 파일의 확장자)에 저장한다.
@@ -78,13 +66,13 @@ int process(char* fileName)
 	while (!feof(fileRead))
 	{
 		// 읽기 초기화 후, 문장 읽어들이기
-		initChar(lineTmp, 4096);
+		memset(lineTmp, '\0', sizeof(lineTmp));
 		fgets(lineTmp, 4096, fileRead);
 
 		if (feof(fileRead)) { break; } // 끝에 공백 한줄 추가되는 것을 방지함
 
 		// 쓰기 초기화
-		initChar(lineWrite, 255);
+		memset(lineWrite, '\0', sizeof(lineWrite));
 
 		// 변수 초기화
 		isBlank = 1; isPrevBlank = 0; isColonAppeared = 0; operandNo = 0;

@@ -30,10 +30,7 @@ void init();
 void init()
 {
 	// RAM을 0으로 초기화
-	for (unsigned short i = 0; i <= 255; i++)
-	{
-		chip.internal_RAM[i] = 0;
-	}
+	memset(chip.internal_RAM, 0, sizeof(chip.internal_RAM));
 
 	// SBUF_send 초기화
 	chip.SBUF_send = 0;
@@ -42,10 +39,7 @@ void init()
 	chip.internal_RAM[SP] = 0x07;
 
 	// Latch 초기화
-	for (unsigned short i = 0; i < 4; i++)
-	{
-		chip.latch[i] = 0;
-	}
+	memset(chip.latch, 0, sizeof(chip.latch));
 
 	// Port의 값을 0xFF로 초기화(Interrupt 무시)
 	chip.internal_RAM[0x80] = 0xFF;
