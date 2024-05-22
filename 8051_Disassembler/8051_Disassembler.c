@@ -141,12 +141,9 @@ int fileReader(char* fileName)
 		// 마지막으로, 파일의 Parity 확인을 한다.
 		if ((unsigned char)(parity + (asciiToHEX(tmp_Data[tmp_REM * 2 + 9]) * 16 + asciiToHEX(tmp_Data[tmp_REM * 2 + 10]))) != 0x00)
 		{
-			if (!isEnd) // Parity 오류 발견 시
-			{
-				// Parity 오류를 발견한 줄의 순서를 출력한다.
-				printf("Parity Error at Line #%d!\n", lineNo + 1);
-				exit(1);
-			}
+			// Parity 오류 발견 시, Parity 오류를 발견한 줄의 순서를 출력한다.
+			printf("Parity Error at Line #%d!\n", lineNo + 1);
+			exit(1);
 		}
 		lineNo++;
 	}
