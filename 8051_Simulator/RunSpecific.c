@@ -265,9 +265,20 @@ void mulAndDiv(char isDiv)
 	// 각각 A와 B에 출력될 값
 	short result, rem;
 
+	// Carry Bit 0으로 설정
+	clearBitAddr(C);
+
 	if (isDiv)
 	{
-		if (!chip.internal_RAM[0xF0]) { return; } // DIV by 0
+		if (!chip.internal_RAM[0xF0]) // 0으로 나눈 경우
+		{
+			// 0으로 나눈 경우, 0verflow Flag를 1로 설정
+			setBitAddr(OV);
+			return;
+		}
+
+		// 0으로 나누지 않은 경우, 0verflow Flag를 0으로 설정
+		clearBitAddr(OV);
 
 		// 몫과 나머지 계산
 		result = chip.internal_RAM[0xE0] / chip.internal_RAM[0xF0];
@@ -277,12 +288,19 @@ void mulAndDiv(char isDiv)
 		result = chip.internal_RAM[0xE0] / chip.internal_RAM[0xF0];
 		rem = result / 256;
 		result %= 256;
+
+		if (rem) // 결괏값이 255를 초과하는 경우
+		{
+			// 결괏값이 255를 초과하는 경우, Overflow Flag를 1로 설정
+			setBitAddr(OV);
+		}else{
+			// 결괏값이 255를 초과하지 않는 경우, Overflow Flag를 0으로 설정
+			clearBitAddr(OV);
+		}
 	}
 	// 결과 출력
 	chip.internal_RAM[0xE0] = result;
 	chip.internal_RAM[0xF0] = rem;
-
-	// DID NOT SET the PSW - 칩 제조사마다 변화가 다름
 
 	return;
 }
@@ -693,6 +711,7 @@ void DAOperation()
 		setBitAddr(C);
 		upper += 6;
 	}
+	// 상위 4bit값이 10 미만이고 Carry값이 0인 경우 Carry값이 0이지만, 이는 앞에서 Carry값이 1인 경우 Carry값을 1로 설정하게 하였으므로, 이 외의 경우, Carry값을 0으로 설정해 줄 필요는 없다. 
 
 	// 상, 하위 4bit값을 16진수로 1의 자릿수만 남긴다.
 	upper %= 16;

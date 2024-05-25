@@ -103,19 +103,19 @@ int fileReader(char* fileName)
 		// 데이터 한줄을 읽어들인다.
 		fscanf(hexFile, "%s", tmp_Data);
 
-		// 빈 파일인 경우
-		if (tmp_Data[0] == 204)
-		{
-			// 파일 데이터 오류를 출력한다
-			printf("File Data Error!\n");
-			exit(1);
-		}
-
 		// 이전값이 최댓값을 넘어간 경우, 그 값을 저장 후
 		if (prev_PC < tmp_PC)
 		{
 			prev_PC = tmp_PC;
 			prev_REM = tmp_REM;
+		}
+
+		// 해당 줄의 시작이 :가 아닌 경우를 확인하고
+		if (tmp_Data[0] != ':')
+		{
+			// 줄의 시작이 :가 아니므로 파일 형식 오류를 출력한다.
+			printf("File Type Error at line #%d!\n", lineNo + 1);
+			exit(1);
 		}
 
 		// 해당 줄의 명령어 개수를 읽고

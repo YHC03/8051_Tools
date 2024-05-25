@@ -1541,6 +1541,14 @@ unsigned short programRunner(unsigned char code, unsigned char data1, unsigned c
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
+		// A의 값이 입력값보다 작은 경우 Carry Bit를 1로 설정하고, 그렇지 않은 경우 0으로 설정한다.
+		if (chip.internal_RAM[ACC] < data1)
+		{
+			setBitAddr(C);
+		}else{
+			clearBitAddr(C);
+		}
+
 		if (chip.internal_RAM[ACC] != data1)
 			return PC + (char)data2;
 
@@ -1549,6 +1557,14 @@ unsigned short programRunner(unsigned char code, unsigned char data1, unsigned c
 		printf("CJNE A, %03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
+
+		// A의 값이 비교할 Register의 값보다 작은 경우 Carry Bit를 1로 설정하고, 그렇지 않은 경우 0으로 설정한다.
+		if (chip.internal_RAM[ACC] < chip.internal_RAM[data1])
+		{
+			setBitAddr(C);
+		}else{
+			clearBitAddr(C);
+		}
 
 		if (chip.internal_RAM[ACC] != chip.internal_RAM[data1])
 			return PC + (char)data2;
@@ -1559,6 +1575,14 @@ unsigned short programRunner(unsigned char code, unsigned char data1, unsigned c
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
+		// @R0의 값이 입력값보다 작은 경우 Carry Bit를 1로 설정하고, 그렇지 않은 경우 0으로 설정한다.
+		if (chip.internal_RAM[chip.internal_RAM[8 * PSWROM]] < data1)
+		{
+			setBitAddr(C);
+		}else{
+			clearBitAddr(C);
+		}
+
 		if (chip.internal_RAM[chip.internal_RAM[8 * PSWROM]] != data1)
 			return PC + (char)data2;
 
@@ -1567,6 +1591,14 @@ unsigned short programRunner(unsigned char code, unsigned char data1, unsigned c
 		printf("CJNE @R1, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
+
+		// @R1의 값이 입력값보다 작은 경우 Carry Bit를 1로 설정하고, 그렇지 않은 경우 0으로 설정한다.
+		if (chip.internal_RAM[chip.internal_RAM[8 * PSWROM + 1]] < data1)
+		{
+			setBitAddr(C);
+		}else{
+			clearBitAddr(C);
+		}
 
 		if (chip.internal_RAM[chip.internal_RAM[8 * PSWROM + 1]] != data1)
 			return PC + (char)data2;
@@ -1577,6 +1609,14 @@ unsigned short programRunner(unsigned char code, unsigned char data1, unsigned c
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
+		// R0의 값이 입력값보다 작은 경우 Carry Bit를 1로 설정하고, 그렇지 않은 경우 0으로 설정한다.
+		if (chip.internal_RAM[8 * PSWROM] < data1)
+		{
+			setBitAddr(C);
+		}else{
+			clearBitAddr(C);
+		}
+
 		if (chip.internal_RAM[8 * PSWROM] != data1)
 			return PC + (char)data2;
 
@@ -1585,6 +1625,14 @@ unsigned short programRunner(unsigned char code, unsigned char data1, unsigned c
 		printf("CJNE R1, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
+
+		// R1의 값이 입력값보다 작은 경우 Carry Bit를 1로 설정하고, 그렇지 않은 경우 0으로 설정한다.
+		if (chip.internal_RAM[8 * PSWROM + 1] < data1)
+		{
+			setBitAddr(C);
+		}else{
+			clearBitAddr(C);
+		}
 
 		if (chip.internal_RAM[8 * PSWROM + 1] != data1)
 			return PC + (char)data2;
@@ -1595,6 +1643,14 @@ unsigned short programRunner(unsigned char code, unsigned char data1, unsigned c
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
+		// R2의 값이 입력값보다 작은 경우 Carry Bit를 1로 설정하고, 그렇지 않은 경우 0으로 설정한다.
+		if (chip.internal_RAM[8 * PSWROM + 2] < data1)
+		{
+			setBitAddr(C);
+		}else{
+			clearBitAddr(C);
+		}
+
 		if (chip.internal_RAM[8 * PSWROM + 2] != data1)
 			return PC + (char)data2;
 
@@ -1603,6 +1659,14 @@ unsigned short programRunner(unsigned char code, unsigned char data1, unsigned c
 		printf("CJNE R3, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
+
+		// R3의 값이 입력값보다 작은 경우 Carry Bit를 1로 설정하고, 그렇지 않은 경우 0으로 설정한다.
+		if (chip.internal_RAM[8 * PSWROM + 3] < data1)
+		{
+			setBitAddr(C);
+		}else{
+			clearBitAddr(C);
+		}
 
 		if (chip.internal_RAM[8 * PSWROM + 3] != data1)
 			return PC + (char)data2;
@@ -1613,6 +1677,14 @@ unsigned short programRunner(unsigned char code, unsigned char data1, unsigned c
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
+		// R4의 값이 입력값보다 작은 경우 Carry Bit를 1로 설정하고, 그렇지 않은 경우 0으로 설정한다.
+		if (chip.internal_RAM[8 * PSWROM + 4] < data1)
+		{
+			setBitAddr(C);
+		}else{
+			clearBitAddr(C);
+		}
+
 		if (chip.internal_RAM[8 * PSWROM + 4] != data1)
 			return PC + (char)data2;
 
@@ -1621,6 +1693,14 @@ unsigned short programRunner(unsigned char code, unsigned char data1, unsigned c
 		printf("CJNE R5, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
+
+		// R5의 값이 입력값보다 작은 경우 Carry Bit를 1로 설정하고, 그렇지 않은 경우 0으로 설정한다.
+		if (chip.internal_RAM[8 * PSWROM + 5] < data1)
+		{
+			setBitAddr(C);
+		}else{
+			clearBitAddr(C);
+		}
 
 		if (chip.internal_RAM[8 * PSWROM + 5] != data1)
 			return PC + (char)data2;
@@ -1631,6 +1711,14 @@ unsigned short programRunner(unsigned char code, unsigned char data1, unsigned c
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
 
+		// R6의 값이 입력값보다 작은 경우 Carry Bit를 1로 설정하고, 그렇지 않은 경우 0으로 설정한다.
+		if (chip.internal_RAM[8 * PSWROM + 6] < data1)
+		{
+			setBitAddr(C);
+		}else{
+			clearBitAddr(C);
+		}
+
 		if (chip.internal_RAM[8 * PSWROM + 6] != data1)
 			return PC + (char)data2;
 
@@ -1639,6 +1727,14 @@ unsigned short programRunner(unsigned char code, unsigned char data1, unsigned c
 		printf("CJNE R7, #%03XH, %05XH\n", data1, PC + (char)data2);
 		if (!isDebugMode) // 디버그 모드의 경우, 일시 중지
 			inputDat();
+
+		// R7의 값이 입력값보다 작은 경우 Carry Bit를 1로 설정하고, 그렇지 않은 경우 0으로 설정한다.
+		if (chip.internal_RAM[8 * PSWROM + 7] < data1)
+		{
+			setBitAddr(C);
+		}else{
+			clearBitAddr(C);
+		}
 
 		if (chip.internal_RAM[8 * PSWROM + 7] != data1)
 			return PC + (char)data2;
