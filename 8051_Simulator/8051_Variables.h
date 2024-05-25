@@ -30,7 +30,7 @@ extern const unsigned char TWO_BYTES[91];
 extern const unsigned char THREE_BYTES[24];
 
 // 특수 명령어 Cycle
-extern const unsigned char TWO_CYCLE[90];
+extern const unsigned char TWO_CYCLE[92];
 extern const unsigned char FOUR_CYCLE[2]; 
 
 // Special Function Register

@@ -2339,7 +2339,7 @@ void RunProgram(unsigned char mode, int end_PC)
 		// Cycle 계산
 		cycle++;
 
-		for (int i = 0; i < 90; i++) // 2cycle 명령어인지 확인
+		for (int i = 0; i < 92; i++) // 2cycle 명령어인지 확인
 		{
 			if (TWO_CYCLE[i] == tmp_Code)
 			{
