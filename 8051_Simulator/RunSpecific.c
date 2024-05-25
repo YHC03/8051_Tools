@@ -285,7 +285,7 @@ void mulAndDiv(char isDiv)
 		rem = chip.internal_RAM[0xE0] % chip.internal_RAM[0xF0];
 	}else{
 		// 곱하기 계산 후, 출력될 값 분리
-		result = chip.internal_RAM[0xE0] / chip.internal_RAM[0xF0];
+		result = chip.internal_RAM[0xE0] * chip.internal_RAM[0xF0];
 		rem = result / 256;
 		result %= 256;
 
@@ -299,8 +299,8 @@ void mulAndDiv(char isDiv)
 		}
 	}
 	// 결과 출력
-	chip.internal_RAM[0xE0] = result;
-	chip.internal_RAM[0xF0] = rem;
+	chip.internal_RAM[0xE0] = (unsigned char)result;
+	chip.internal_RAM[0xF0] = (unsigned char)rem;
 
 	return;
 }
