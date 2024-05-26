@@ -15,7 +15,7 @@
 
 // 파일 입력
 int fileReader(char* fileName);
-unsigned char asciiToHEX(unsigned char orig); // HEX 변환
+unsigned char asciiCodetoHEX(unsigned char orig); // ASCII Code를 HEX로 변환
 
 
 #endif

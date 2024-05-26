@@ -31,7 +31,7 @@ const unsigned char THREE_BYTES[24] = { 0x02, 0x10, 0x12, 0x20, 0x30, 0x43, 0x53
 
 // 파일 입력
 int fileReader(char* fileName);
-unsigned char asciiToHEX(unsigned char orig); // HEX 변환
+unsigned char asciiCodetoHEX(unsigned char orig); // ASCII Code를 HEX로 변환
 
 // 프로그램 구동
 void RunProgram(char* fileName, int end_PC);
@@ -41,13 +41,13 @@ void programRunner(char* fileName, unsigned char code, unsigned char data1, unsi
 // 함수 끝
 
 
-/* asciiToHEX() 함수
+/* asciiCodetoHEX() 함수
 *
-* 기능 : ASCII 입력값을 HEX값으로 바꾼다.
+* 기능 : ASCII Code 입력값을 HEX값으로 바꾼다.
 * 입력 변수 : 기존값 orig
 * 출력 변수 : HEX 변환값
 */
-unsigned char asciiToHEX(unsigned char orig)
+unsigned char asciiCodetoHEX(unsigned char orig)
 {
 	// 0~9인 경우
 	char number = orig - '0';
@@ -119,27 +119,27 @@ int fileReader(char* fileName)
 		}
 
 		// 해당 줄의 명령어 개수를 읽고
-		tmp_REM = asciiToHEX(tmp_Data[1]) * 16 + asciiToHEX(tmp_Data[2]); //CC
+		tmp_REM = asciiCodetoHEX(tmp_Data[1]) * 16 + asciiCodetoHEX(tmp_Data[2]); //CC
 		parity += tmp_REM;
 
 		// 해당 줄의 Program Counter 위치를 읽고
-		tmp_PC = asciiToHEX(tmp_Data[3]) * 0x1000 + asciiToHEX(tmp_Data[4]) * 0x100 + asciiToHEX(tmp_Data[5]) * 0x10 + asciiToHEX(tmp_Data[6]); //AAAA
+		tmp_PC = asciiCodetoHEX(tmp_Data[3]) * 0x1000 + asciiCodetoHEX(tmp_Data[4]) * 0x100 + asciiCodetoHEX(tmp_Data[5]) * 0x10 + asciiCodetoHEX(tmp_Data[6]); //AAAA
 		parity += tmp_PC / 0x100 + tmp_PC % 0x100;
 
 		// 해당 줄의 종료 여부를 읽고
-		isEnd = asciiToHEX(tmp_Data[8]);
+		isEnd = asciiCodetoHEX(tmp_Data[8]);
 		parity += isEnd;
 		
 		// 해당 줄의 명령 코드를 모두 읽어들여, ROM 변수에 저장한다.
 		for (unsigned char i = 0; i < tmp_REM; i++)
 		{
-			ROM[tmp_PC] = asciiToHEX(tmp_Data[i * 2 + 9]) * 16 + asciiToHEX(tmp_Data[i * 2 + 10]);
+			ROM[tmp_PC] = asciiCodetoHEX(tmp_Data[i * 2 + 9]) * 16 + asciiCodetoHEX(tmp_Data[i * 2 + 10]);
 			parity += ROM[tmp_PC];
 			tmp_PC++;
 		}
 
 		// 마지막으로, 파일의 Parity 확인을 한다.
-		if ((unsigned char)(parity + (asciiToHEX(tmp_Data[tmp_REM * 2 + 9]) * 16 + asciiToHEX(tmp_Data[tmp_REM * 2 + 10]))) != 0x00)
+		if ((unsigned char)(parity + (asciiCodetoHEX(tmp_Data[tmp_REM * 2 + 9]) * 16 + asciiCodetoHEX(tmp_Data[tmp_REM * 2 + 10]))) != 0x00)
 		{
 			// Parity 오류 발견 시, Parity 오류를 발견한 줄의 순서를 출력한다.
 			printf("Parity Error at Line #%d!\n", lineNo + 1);
