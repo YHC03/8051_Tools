@@ -51,17 +51,13 @@ It prints memory state of 8051(also prints the state of PSW, TCON memory in bit)
 - Port 0-3 Input(You cannot modify only a specific port. However, you can just type the privious state of the port.)  
 
 ##### Unavailable Functions
-- Serial-related functions(Also Serial interrupt routine was not implemented)  
+- Serial-related functions(Also Serial interrupt service routine was not implemented)  
 - External memory is not available  
 
 ##### Things to know
-When calling getPortValue() function at inputDat() function, we will assume that there is a pull-up resistor at P0 Port.  
+When calling getPortValue() function at inputDat() function, this simulator will assume that there is a pull-up resistor at P0 Port.  
 The SBUF(0x99) has 2 different memory, one for send and another for receive. The I/O on the memory map printed means (Input for 8051, Output of 8051).  
 Outputs of JMP-related command are based on assembler-available commands, so program counter value of the destination will be printed at the label's site, not the difference between the program counter value of current location and the program counter value of the label's location.  
-
----
-## The Reason why I Made This
-To make a simulator of 8051 chip - which I learns at Microprocessor and HDL class(in University 3rd grade, 1st semester).  
 
 ---
 ## Reference 
@@ -70,4 +66,4 @@ Lecture notes of Microprocessor and HDL class, Hongik University(First Semester 
 
 ---
 Creator : YHC03  
-Last Modified Date : 2024/05/11  
+Last Modified Date : 2024/05/27  
