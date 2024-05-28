@@ -76,4 +76,9 @@ extern const unsigned char FOUR_CYCLE[2];
 #define PT0 0xB9
 #define PX0 0xB8
 
+#define INT0 0xB2 /*P3.2*/
+#define INT1 0xB3 /*P3.3*/
+#define T0 0xB4 /*P3.4*/
+#define T1 0xB5 /*P3.5*/
+
 #endif
