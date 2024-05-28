@@ -12,8 +12,8 @@
 void timerControl(int cycle)
 {
 	// 외부 Clock (Rising Edge) 관련 변수 선언
-	static char T0 = 0;
-	static char T1 = 0;
+	static char prev_T0 = 0;
+	static char prev_T1 = 0;
 
 	// TRO 활성화시
 	if (getBitAddr(TR0))
@@ -22,10 +22,10 @@ void timerControl(int cycle)
 		if (!(chip.internal_RAM[TMOD] & 0x08) || getBitAddr(0xB2)/*P3.3*/)
 		{
 			// C/T=1이면서 T0=(1->0) 혹은 C/T=0
-			if ((!getBitAddr(0xA4/*P3.4*/) && T0) || !(chip.internal_RAM[TMOD] & 0x04))
+			if ((!getBitAddr(0xB4/*P3.4*/) && prev_T0) || !(chip.internal_RAM[TMOD] & 0x04))
 			{
 				// T0값 저장
-				T0 = getBitAddr(0xA4/*P3.4*/);
+				prev_T0 = getBitAddr(0xB4/*P3.4*/);
 
 				// Timer Mode 확인 후 값 증가
 				switch (chip.internal_RAM[TMOD] & 0x03)
@@ -102,7 +102,7 @@ void timerControl(int cycle)
 				}
 			}
 			// T0값 저장
-			T0 = getBitAddr(0xA4/*P3.4*/);
+			prev_T0 = getBitAddr(0xB4/*P3.4*/);
 		}
 		if ((chip.internal_RAM[TMOD] & 0x03) == 0x03) // TMOD=0x03에서의 2번째 Timer는 무조건 시간에 의해서만 작동함
 		{
@@ -125,10 +125,10 @@ void timerControl(int cycle)
 		if (!(chip.internal_RAM[TMOD] & 0x80) || getBitAddr(0xB2)/*P3.3*/)
 		{
 			// C/T=1이면서 T1=(1->0) 혹은 C/T=0
-			if ((!getBitAddr(0xA5/*P3.5*/) && T1) || !(chip.internal_RAM[TMOD] & 0x40))
+			if ((!getBitAddr(0xB5/*P3.5*/) && prev_T1) || !(chip.internal_RAM[TMOD] & 0x40))
 			{
 				// T1값 저장
-				T1 = getBitAddr(0xA5/*P3.5*/);
+				prev_T1 = getBitAddr(0xB5/*P3.5*/);
 
 				// Timer Mode 확인 후 값 증가
 				switch (chip.internal_RAM[TMOD] & 0x30)
@@ -197,7 +197,7 @@ void timerControl(int cycle)
 				}
 			}
 			// T1값 저장
-			T1 = getBitAddr(0xA5/*P3.4*/);
+			prev_T1 = getBitAddr(0xB5/*P3.4*/);
 		}
 	}
 
@@ -331,8 +331,8 @@ void clearInterrupt()
 int interruptControl(int PC)
 {
 	// 외부 Interrupt (Falling Edge) 관련 변수 선언
-	static char INT0 = 1;
-	static char INT1 = 1;
+	static char prev_INT0 = 1;
+	static char prev_INT1 = 1;
 
 	const unsigned char INTERRUPT_PC[4] = { 0x03, 0x0B, 0x13, 0x1B }; // Serial은 지원 안함.
 
@@ -357,13 +357,13 @@ int interruptControl(int PC)
 
 
 	// 외부 인터럽트 관련 설정
-	if ((!getBitAddr(0xB2/*P3.2*/) && INT0) || getBitAddr(IE0)) // P3.2가 Falling Edge거나 IE0 = 1(현상 유지)일 때
+	if ((!getBitAddr(0xB2/*P3.2*/) && prev_INT0) || getBitAddr(IE0)) // P3.2가 Falling Edge거나 IE0 = 1(현상 유지)일 때
 	{
 		setBitAddr(IE0);
 	}else{
 		clearBitAddr(IE0);
 	}
-	if ((!getBitAddr(0xB3/*P3.3*/) && INT1) || getBitAddr(IE1)) // P3.3이 Falling Edge거나 IE1 = 1(현상 유지)일 때
+	if ((!getBitAddr(0xB3/*P3.3*/) && prev_INT1) || getBitAddr(IE1)) // P3.3이 Falling Edge거나 IE1 = 1(현상 유지)일 때
 	{
 		setBitAddr(IE1);
 	}else{
@@ -381,7 +381,7 @@ int interruptControl(int PC)
 		}
 
 	}
-	INT0 = getBitAddr(0xB2/*P3.2*/);
+	prev_INT0 = getBitAddr(0xB2/*P3.2*/);
 
 	if (getBitAddr(ET0) && !intData[1]) // 타이머 인터럽트 0 (해당 인터럽트 비활성화시에만 실행)
 	{
@@ -400,7 +400,7 @@ int interruptControl(int PC)
 		}
 
 	}
-	INT1 = getBitAddr(0xB3/*P3.3*/);
+	prev_INT1 = getBitAddr(0xB3/*P3.3*/);
 
 	if (getBitAddr(ET1) && !intData[3]) // 타이머 인터럽트 1 (해당 인터럽트 비활성화시에만 실행)
 	{
