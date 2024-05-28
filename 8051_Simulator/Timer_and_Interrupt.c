@@ -74,8 +74,19 @@ void timerControl(int cycle)
 					{
 						chip.internal_RAM[TL0] += !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1;
 
-						// (Overflow가 발생한) TL0(Timer변수)에 TH0(기존값 저장한 변수) 더하기
-						chip.internal_RAM[TL0] += chip.internal_RAM[TH0];
+						// 명령어 1회 실행 시, 2번 이상 Timer Overflow가 발생하는 경우 처리
+						if (chip.internal_RAM[TH0] == 0xFF) // TH0 = 0xFF일 때 발생하는 불필요한 반복 제외
+						{
+							// TL0(Timer변수)는 무조건 0xFF(=TH0)
+							chip.internal_RAM[TL0] = 0xFF;
+
+						}else{
+							// 정상적인 Timer값이 나올 때 까지 반복
+							do{
+								//(Overflow가 발생한) TL0(Timer변수)에 TH0(기존값 저장한 변수) 더하기
+								chip.internal_RAM[TL0] += chip.internal_RAM[TH0];
+							}while(chip.internal_RAM[TL0] < chip.internal_RAM[TH0]);
+						}
 
 						// Timer0 초기화 후, TF0를 1로 설정
 						setBitAddr(TF0);
@@ -174,8 +185,19 @@ void timerControl(int cycle)
 					{
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
 
-						// (Overflow가 발생한) TL0(Timer변수)에 TH0(기존값 저장한 변수) 더하기
-						chip.internal_RAM[TL1] += chip.internal_RAM[TH1];
+						// 명령어 1회 실행 시, 2번 이상 Timer Overflow가 발생하는 경우 처리
+						if (chip.internal_RAM[TH1] == 0xFF) // TH0 = 0xFF일 때 발생하는 불필요한 반복 제외
+						{
+							// TL1(Timer변수)는 무조건 0xFF(=TH1)
+							chip.internal_RAM[TL1] = 0xFF;
+
+						}else{
+							// 정상적인 Timer값이 나올 때 까지 반복
+							do{
+								// (Overflow가 발생한) TL1(Timer변수)에 TH1(기존값 저장한 변수) 더하기
+								chip.internal_RAM[TL1] += chip.internal_RAM[TH1];
+							}while(chip.internal_RAM[TL1] < chip.internal_RAM[TH1]);
+						}
 
 						// Timer1 초기화 후, TF1를 1로 설정
 						setBitAddr(TF1);
