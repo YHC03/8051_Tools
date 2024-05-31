@@ -1,5 +1,7 @@
 ﻿#include"Timer_and_Interrupt.h"
 
+// Timer 0 Mode 3에서 TF1 활성화 시, Timer 1 Interrupt 활성화를 방지하기 위한 변수(1인 경우, Timer 1에 의해 Interrupt가 발생한 것을 의미함)
+unsigned char TF1_INTERRUPT_FLAG = 0;
 
 /* timerControl() 함수
 *
@@ -154,6 +156,7 @@ void timerControl(int cycle)
 							// Timer1 초기화 후, TF1를 1로 설정
 							chip.internal_RAM[TH1] = 0;
 							setBitAddr(TF1);
+							TF1_INTERRUPT_FLAG = 1; // Timer 1에 의해 Interrupt가 활성화됨을 표시
 						}
 					}else{
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
@@ -173,6 +176,7 @@ void timerControl(int cycle)
 						{
 							// Timer1 초기화 후, TF1를 1로 설정
 							setBitAddr(TF1);
+							TF1_INTERRUPT_FLAG = 1; // Timer 1에 의해 Interrupt가 활성화됨을 표시
 						}
 					}else{
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
@@ -183,6 +187,7 @@ void timerControl(int cycle)
 					// !(chip.internal_RAM[TMOD] & 0x04) ? cycle : 1 는 Timer/Counter 선택이다. cycle은 Timer, 1은 외부입력(Counter)
 					if (chip.internal_RAM[TL1] + (!(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1) >= 0x100)
 					{
+						// Timer1 초기화 후, TF1를 1로 설정
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
 
 						// 명령어 1회 실행 시, 2번 이상 Timer Overflow가 발생하는 경우 처리
@@ -199,8 +204,8 @@ void timerControl(int cycle)
 							}while(chip.internal_RAM[TL1] < chip.internal_RAM[TH1]);
 						}
 
-						// Timer1 초기화 후, TF1를 1로 설정
 						setBitAddr(TF1);
+						TF1_INTERRUPT_FLAG = 1; // Timer 1에 의해 Interrupt가 활성화됨을 표시
 					}else{
 						chip.internal_RAM[TL1] += !(chip.internal_RAM[TMOD] & 0x40) ? cycle : 1;
 					}
@@ -254,6 +259,7 @@ char getInterruptPriorityRun()
 
 	}else if ((interruptPrior & 0x08) && intData[3] == 2){ // Priority 설정한 Interrupt 3 실행 대기
 		clearBitAddr(TF1);
+		TF1_INTERRUPT_FLAG = 0;
 		return 3;
 	}else if ((interruptPrior & 0x08) && intData[3] == 1){ // Priority 설정한 Interrupt 3 실행중
 		return -1;
@@ -279,6 +285,7 @@ char getInterruptPriorityRun()
 
 	}else if (!(interruptPrior & 0x08) && intData[3] == 2){ // Priority 설정하지 않은 Interrupt 3 실행 대기
 		clearBitAddr(TF1);
+		TF1_INTERRUPT_FLAG = 0;
 		return 3;
 	}else if (!(interruptPrior & 0x08) && intData[3] == 1){ // Priority 설정하지 않은 Interrupt 3 실행중
 		return -1;
@@ -420,7 +427,7 @@ int interruptControl(int PC)
 
 	if (getBitAddr(ET1) && !intData[3]) // 타이머 인터럽트 1 (해당 인터럽트 비활성화시에만 실행)
 	{
-		if (getBitAddr(TF1))
+		if (getBitAddr(TF1) && TF1_INTERRUPT_FLAG)
 		{
 			intData[3] = 2;
 		}
