@@ -49,6 +49,7 @@ HEX 파일의 Parity에서 오류가 발생하는 경우, Parity Error의 위치
 - Timer/Counter, Interrupt 기능  
 - P0-P3 Port의 Latch에 저장된 데이터 조회 기능  
 - Port 입력 기능 (특정 Port만을 수정할 수는 없음. 다만, 기존값을 그대로 입력하는 것은 가능함.)  
+- PCON Register의 Sleeping 기능  
 
 ##### 이용 불가 기능
 - Serial 관련 기능 이용 불가(Interrupt Service Routine또한 구현되지 않음)  

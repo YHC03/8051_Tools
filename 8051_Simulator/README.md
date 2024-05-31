@@ -49,6 +49,7 @@ It prints memory state of 8051(also prints the state of PSW, TCON memory in bit)
 - 8051 Timer/Counter and Interrupt  
 - Visualize Latch information of Port 0-3  
 - Port 0-3 Input(You cannot modify only a specific port. However, you can just type the privious state of the port.)  
+- Sleeping Functions of PCON Register  
 
 ##### Unavailable Functions
 - Serial-related functions(Also Serial interrupt service routine was not implemented)  

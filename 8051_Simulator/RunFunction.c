@@ -2295,7 +2295,7 @@ void RunProgram(unsigned char mode, int end_PC)
 		}
 
 		// PCON의 설정에 따라, Sleeping인 경우 작동하지 않음
-		if (!(chip.internal_RAM[PCON] & 0x03))
+		if (!(chip.internal_RAM[PCON] & 0x03) || intData[0] || intData[2])
 		{
 
 			// 실행할 명령 코드를 가져온 후, PC값 1 증가
@@ -2369,7 +2369,7 @@ void RunProgram(unsigned char mode, int end_PC)
 		timerControl((int)(cycle - prevCycle));
 
 		// PCON의 설정에 따라, Sleeping인 경우 확인
-		if(!(chip.internal_RAM[PCON] & 0x03)) // Chip이 Sleeping 상태가 아닌 경우
+		if(!(chip.internal_RAM[PCON] & 0x03) || intData[0] || intData[2]) // Chip이 Sleeping 상태가 아닌 경우
 		{
 			// 프로그램 실행
 			PC = programRunner(tmp_Code, dat1, dat2, PC, mode); // 해당 명령어 실행
