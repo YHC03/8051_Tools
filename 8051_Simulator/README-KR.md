@@ -34,7 +34,7 @@ HEX 파일의 Parity에서 오류가 발생하는 경우, Parity Error의 위치
 
 ### 1. 초기 화면
 0 선택 시, 단계별 실행(디버그)  
-1 선택 시, Program Counter가 .hex 파일의 종료 지점의 Program Counter의 이전까지(Interrupt Enable 여부와는 무관하다), 혹은 현재 Program Counter값이 직전값과 동일할때(아무것도 하지 않는 무한 루프로 판단)까지 계속 실행 후, 결과 출력, 이후 프로그램 종료  
+1 선택 시, Program Counter가 .hex 파일의 종료 지점의 Program Counter의 이전까지(Interrupt Enable 여부와는 무관하다), 현재 Program Counter값이 직전값과 동일할때(아무것도 하지 않는 무한 루프로 판단), 혹은 Chip이 PCON Register의 값의 변화에 따라 Sleeping Mode에 진입하기 전까지 계속 실행 후, 결과 출력, 이후 프로그램 종료  
 
 ---
 ### 2. 디버그 화면
@@ -66,4 +66,4 @@ JMP 관련 구문들의 출력은 Assembler에서 이용할 수 있는 구문이
 
 ---
 작성자 : YHC03  
-최종 작성일 : 2024/05/27  
+최종 작성일 : 2024/06/01  

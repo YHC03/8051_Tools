@@ -401,6 +401,7 @@ int interruptControl(int PC)
 		if ((getBitAddr(IE0) && getBitAddr(IT0) && !intData[0]) || (!getBitAddr(INT0) && !getBitAddr(IT0)))
 		{
 			intData[0] = 2;
+			chip.internal_RAM[PCON] = chip.internal_RAM[PCON] & 0xFC; // 외부 Interrupt 발생에 따른 Chip Sleeping 해제
 		}
 
 	}
@@ -420,6 +421,7 @@ int interruptControl(int PC)
 		if ((getBitAddr(IE1) && getBitAddr(IT1) && !intData[2]) || (!getBitAddr(INT1) && !getBitAddr(IT1)))
 		{
 			intData[2] = 2;
+			chip.internal_RAM[PCON] = chip.internal_RAM[PCON] & 0xFC; // 외부 Interrupt 발생에 따른 Chip Sleeping 해제
 		}
 
 	}

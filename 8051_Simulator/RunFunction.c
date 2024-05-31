@@ -2294,80 +2294,95 @@ void RunProgram(unsigned char mode, int end_PC)
 			printChip(cycle, PC); // prevCycle, prev_PC 대신 사용 가능. Cycle과 Program Counter값 변경 시 prevCycle, prev_PC로 바꿀 것.
 		}
 
-		// 실행할 명령 코드를 가져온 후, PC값 1 증가
-		tmp_Code = ROM[PC];
-		PC++;
-
-		// 자동 실행 모드에서, Program Counter가 Overflow된 경우, 프로그램 종료
-		if (PC == 0 && mode) { isEnd = 1; }
-
-
-		// 명령어 길이 계산
-		bytes = 1;
-		for (int i = 0; i < 91; i++) // 2byte 명령어인지 확인
+		// PCON의 설정에 따라, Sleeping인 경우 작동하지 않음
+		if (!(chip.internal_RAM[PCON] & 0x03))
 		{
-			if (TWO_BYTES[i] == tmp_Code)
+
+			// 실행할 명령 코드를 가져온 후, PC값 1 증가
+			tmp_Code = ROM[PC];
+			PC++;
+
+			// 자동 실행 모드에서, Program Counter가 Overflow된 경우, 프로그램 종료
+			if (PC == 0 && mode) { isEnd = 1; }
+
+
+			// 명령어 길이 계산
+			bytes = 1;
+			for (int i = 0; i < 91; i++) // 2byte 명령어인지 확인
 			{
-				bytes = 2;
-				dat1 = ROM[PC];
-				PC++;
-				break;
+				if (TWO_BYTES[i] == tmp_Code)
+				{
+					bytes = 2;
+					dat1 = ROM[PC];
+					PC++;
+					break;
+				}
 			}
-		}
 
-		// 자동 실행 모드에서, Program Counter가 Overflow된 경우, 프로그램 종료
-		if (PC == 0 && mode) { isEnd = 1; }
+			// 자동 실행 모드에서, Program Counter가 Overflow된 경우, 프로그램 종료
+			if (PC == 0 && mode) { isEnd = 1; }
 
 
-		for (int i = 0; i < 24; i++) // 3byte 명령어인지 확인
-		{
-			if (THREE_BYTES[i] == tmp_Code)
+			for (int i = 0; i < 24; i++) // 3byte 명령어인지 확인
 			{
-				bytes = 3;
-				dat1 = ROM[PC];
-				PC++;
-				dat2 = ROM[PC];
-				PC++;
-				break;
+				if (THREE_BYTES[i] == tmp_Code)
+				{
+					bytes = 3;
+					dat1 = ROM[PC];
+					PC++;
+					dat2 = ROM[PC];
+					PC++;
+					break;
+				}
 			}
-		}
 
-		// 자동 실행 모드에서, Program Counter가 Overflow된 경우, 프로그램 종료
-		if (PC == 0 && mode) { isEnd = 1; }
+			// 자동 실행 모드에서, Program Counter가 Overflow된 경우, 프로그램 종료
+			if (PC == 0 && mode) { isEnd = 1; }
 
 
-		// Cycle 계산
-		cycle++;
+			// Cycle 계산
+			cycle++;
 
-		for (int i = 0; i < 92; i++) // 2cycle 명령어인지 확인
-		{
-			if (TWO_CYCLE[i] == tmp_Code)
+			for (int i = 0; i < 92; i++) // 2cycle 명령어인지 확인
 			{
-				cycle++;
-				break;
+				if (TWO_CYCLE[i] == tmp_Code)
+				{
+					cycle++;
+					break;
+				}
 			}
-		}
 
-		for (int i = 0; i < 2; i++) // 4cycle 명령어인지 확인
-		{
-			if (FOUR_CYCLE[i] == tmp_Code)
+			for (int i = 0; i < 2; i++) // 4cycle 명령어인지 확인
 			{
-				cycle += 3;
-				i = 3;
+				if (FOUR_CYCLE[i] == tmp_Code)
+				{
+					cycle += 3;
+					i = 3;
+				}
 			}
-		}
 
-		// 자동 실행 모드에서, Program Counter가 파일 끝을 넘어간 경우, 실행 종료
-		if (PC > end_PC && mode){ isEnd = 1; }
+			// 자동 실행 모드에서, Program Counter가 파일 끝을 넘어간 경우, 실행 종료
+			if (PC > end_PC && mode) { isEnd = 1; }
+		}
 
 		// Timer 계산
 		timerControl((int)(cycle - prevCycle));
 
-
-		// 프로그램 실행
-		PC = programRunner(tmp_Code, dat1, dat2, PC, mode); // 해당 명령어 실행
-		putParity(); // Parity 계산
-
+		// PCON의 설정에 따라, Sleeping인 경우 확인
+		if(!(chip.internal_RAM[PCON] & 0x03)) // Chip이 Sleeping 상태가 아닌 경우
+		{
+			// 프로그램 실행
+			PC = programRunner(tmp_Code, dat1, dat2, PC, mode); // 해당 명령어 실행
+			putParity(); // Parity 계산
+		}else{ // Chip이 Sleeping 상태인 경우
+			printf("Microprocessor is now sleeping due to PCON Settings\n");
+			if(!mode) // Debug 모드의 경우
+			{
+				inputDat();
+			}else{ // 자동 실행 모드의 경우
+				isEnd = 1; // (외부 Interrupt 발생을 제외하고는) 무한 반복이므로 자동 실행 종료
+			}
+		}
 
 		// 자동 실행 모드에서, Program Counter가 파일 끝을 넘어간 경우, 실행 종료
 		if ((PC > end_PC) && mode) { isEnd = 1; }

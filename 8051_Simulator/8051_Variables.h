@@ -48,6 +48,7 @@ extern const unsigned char FOUR_CYCLE[2];
 #define SBUF 0x99
 #define IE 0xA8
 #define IP 0xB8
+#define PCON 0x87
 
 // Special Bit Address
 #define C 0xD7 // Carry Bit

@@ -34,7 +34,7 @@ If the parity error occurs at .hex file, the program stops while notifying which
 
 ### 1. Initial Window
 If you choose 0, it runs as step-by-step debuging mode.  
-If you choose 1(or any other number except 0), the simulator automatically runs until the program counter goes over the .hex file's last program counter(Regardless of the state of interrupt), or the program counter's value is the same as the last value(meaning that the program has just entered an infinite loop that does nothing). After the program stops, it prints the results, and terminates the program.  
+If you choose 1(or any other number except 0), the simulator automatically runs until the program counter goes over the .hex file's last program counter(Regardless of the state of interrupt), the program counter's value is the same as the last value(meaning that the program has just entered an infinite loop that does nothing), or the chip encounters in sleeping mode by modifying the value of PCON register. After the program stops, it prints the results, and terminates the program.  
 
 ---
 ### 2. Debug Window
@@ -66,4 +66,4 @@ Lecture notes of Microprocessor and HDL class, Hongik University(First Semester 
 
 ---
 Creator : YHC03  
-Last Modified Date : 2024/05/27  
+Last Modified Date : 2024/06/01  
