@@ -242,6 +242,7 @@ char getInterruptPriorityRun()
 	// 0, 1, 2, 3 순서로 Priority & 실행 중이 아님을 확인(실행 중인 경우 -1)
 	if ((interruptPrior & 0x01) && intData[0] == 2) // Priority 설정한 Interrupt 0 실행 대기
 	{
+		clearBitAddr(IE0);
 		return 0;
 	}else if ((interruptPrior & 0x01) && intData[0] == 1){ // Priority 설정한 Interrupt 0 실행중
 		return -1;
@@ -253,6 +254,7 @@ char getInterruptPriorityRun()
 		return -1;
 
 	}else if ((interruptPrior & 0x04) && intData[2] == 2){ // Priority 설정한 Interrupt 2 실행 대기
+		clearBitAddr(IE1);
 		return 2;
 	}else if ((interruptPrior & 0x04) && intData[2] == 1){ // Priority 설정한 Interrupt 2 실행중
 		return -1;
@@ -268,6 +270,7 @@ char getInterruptPriorityRun()
 	// 0, 1, 2, 3 순서로 ~Priority & 실행 중이 아님을 확인(실행 중인 경우 -1)
 	if (!(interruptPrior & 0x01) && intData[0] == 2) // Priority 설정하지 않은 Interrupt 0 실행 대기
 	{
+		clearBitAddr(IE0);
 		return 0;
 	}else if (!(interruptPrior & 0x01) && intData[0] == 1){ // Priority 설정하지 않은 Interrupt 0 실행중
 		return -1;
@@ -279,6 +282,7 @@ char getInterruptPriorityRun()
 		return -1;
 
 	}else if (!(interruptPrior & 0x04) && intData[2] == 2){ // Priority 설정하지 않은 Interrupt 2 실행 대기
+		clearBitAddr(IE1);
 		return 2;
 	}else if (!(interruptPrior & 0x04) && intData[2] == 1){ // Priority 설정하지 않은 Interrupt 2 실행중
 		return -1;
@@ -308,14 +312,12 @@ void clearInterrupt()
 	if ((interruptPrior & 0x01) && intData[0] == 1) // Priority 설정한 Interrupt 0 실행 종료
 	{
 		intData[0] = 0;
-		clearBitAddr(IE0);
 		return;
 	}else if ((interruptPrior & 0x02) && intData[1] == 1){ // Priority 설정한 Interrupt 1 실행 종료
 		intData[1] = 0;
 		return;
 	}else if ((interruptPrior & 0x04) && intData[2] == 1){ // Priority 설정한 Interrupt 2 실행 종료
 		intData[2] = 0;
-		clearBitAddr(IE1);
 		return;
 	}else if ((interruptPrior & 0x08) && intData[3] == 1){ // Priority 설정한 Interrupt 3 실행 종료
 		intData[3] = 0;
@@ -326,14 +328,12 @@ void clearInterrupt()
 	if (intData[0] == 1) // Priority 설정 안 한 Interrupt 0 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 	{
 		intData[0] = 0;
-		clearBitAddr(IE0);
 		return;
 	}else if (intData[1] == 1){ // Priority 설정 안 한 Interrupt 1 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 		intData[1] = 0;
 		return;
 	}else if (intData[2] == 1){ // Priority 설정 안 한 Interrupt 2 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 		intData[2] = 0;
-		clearBitAddr(IE1);
 		return;
 	}else if (intData[3] == 1){ // Priority 설정 안 한 Interrupt 3 실행 종료 (Priority가 설정된 경우, 위에서 처리하여 Return됨)
 		intData[3] = 0;
